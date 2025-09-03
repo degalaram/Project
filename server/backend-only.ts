@@ -1,0 +1,244 @@
+import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
+import { createServer } from "http";
+import { storage } from "./storage.js";
+import {
+  insertUserSchema,
+  insertJobSchema,
+  insertCourseSchema,
+  insertApplicationSchema,
+  insertContactSchema,
+  insertCompanySchema,
+  loginSchema
+} from "../shared/schema.js";
+import { marked } from 'marked';
+
+const app = express();
+
+// CORS configuration for frontend
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://your-vercel-app.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+};
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+    }
+  });
+  
+  next();
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    service: 'jobportal-backend'
+  });
+});
+
+// Auth routes
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const validatedData = insertUserSchema.parse(req.body);
+    const existingUser = await storage.getUserByEmail(validatedData.email);
+    
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists with this email" });
+    }
+
+    const user = await storage.createUser(validatedData);
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Failed to create user" });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const validatedData = loginSchema.parse(req.body);
+    const user = await storage.validateUser(validatedData.email, validatedData.password);
+
+    if (!user) {
+      return res.status(401).json({ message: "Wrong username or wrong password" });
+    }
+
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    res.status(500).json({ message: "Failed to login" });
+  }
+});
+
+// Companies routes
+app.get("/api/companies", async (req, res) => {
+  try {
+    const companies = await storage.getCompanies();
+    res.json(companies);
+  } catch (error) {
+    console.error("Error fetching companies:", error);
+    res.status(500).json({ message: "Failed to fetch companies" });
+  }
+});
+
+app.post("/api/companies", async (req, res) => {
+  try {
+    const validatedData = insertCompanySchema.parse(req.body);
+    const company = await storage.createCompany(validatedData);
+    res.json(company);
+  } catch (error) {
+    console.error("Error creating company:", error);
+    res.status(500).json({ message: "Failed to create company" });
+  }
+});
+
+// Jobs routes
+app.get("/api/jobs", async (req, res) => {
+  try {
+    const { experienceLevel, location, search } = req.query;
+    const filters = {
+      experienceLevel: experienceLevel as string,
+      location: location as string,
+      search: search as string,
+    };
+    
+    const jobs = await storage.getJobs(filters);
+    res.json(jobs);
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    res.status(500).json({ message: "Failed to fetch jobs" });
+  }
+});
+
+app.get("/api/jobs/:id", async (req, res) => {
+  try {
+    const job = await storage.getJob(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    res.json(job);
+  } catch (error) {
+    console.error("Error fetching job:", error);
+    res.status(500).json({ message: "Failed to fetch job" });
+  }
+});
+
+app.post("/api/jobs", async (req, res) => {
+  try {
+    const validatedData = insertJobSchema.parse(req.body);
+    const job = await storage.createJob(validatedData);
+    res.json(job);
+  } catch (error) {
+    console.error("Error creating job:", error);
+    res.status(500).json({ message: "Failed to create job" });
+  }
+});
+
+// Applications routes
+app.post("/api/applications", async (req, res) => {
+  try {
+    const validatedData = insertApplicationSchema.parse(req.body);
+    const application = await storage.createApplication(validatedData);
+    res.json(application);
+  } catch (error) {
+    console.error("Error creating application:", error);
+    res.status(500).json({ message: "Failed to create application" });
+  }
+});
+
+app.get("/api/applications/user/:userId", async (req, res) => {
+  try {
+    const applications = await storage.getUserApplications(req.params.userId);
+    res.json(applications);
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({ message: "Failed to fetch applications" });
+  }
+});
+
+// Courses routes
+app.get("/api/courses", async (req, res) => {
+  try {
+    const { category } = req.query;
+    const courses = await storage.getCourses(category as string);
+    res.json(courses);
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    res.status(500).json({ message: "Failed to fetch courses" });
+  }
+});
+
+app.get("/api/courses/:id", async (req, res) => {
+  try {
+    const course = await storage.getCourse(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+    res.json(course);
+  } catch (error) {
+    console.error("Error fetching course:", error);
+    res.status(500).json({ message: "Failed to fetch course" });
+  }
+});
+
+// Contact route
+app.post("/api/contact", async (req, res) => {
+  try {
+    const validatedData = insertContactSchema.parse(req.body);
+    const contact = await storage.createContact(validatedData);
+    res.json(contact);
+  } catch (error) {
+    console.error("Error creating contact:", error);
+    res.status(500).json({ message: "Failed to create contact" });
+  }
+});
+
+// Error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  console.error('Error:', err);
+  res.status(status).json({ message });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Endpoint not found' });
+});
+
+const port = parseInt(process.env.PORT || '10000', 10);
+const server = createServer(app);
+
+server.listen(port, '0.0.0.0', () => {
+  console.log(`JobPortal Backend running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Database: ${process.env.DATABASE_URL ? 'Connected' : 'Using in-memory storage'}`);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+  });
+});
