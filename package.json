@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
     "build": "npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs",
-    "build:frontend": "vite build",
     "start": "npx cross-env NODE_ENV=production node dist/production.mjs",
     "check": "npx tsc",
     "db:push": "npx drizzle-kit push"
@@ -64,7 +63,6 @@
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
-    "marked": "^9.1.6",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
     "multer": "^2.0.2",
@@ -108,6 +106,7 @@
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "esbuild": "^0.25.0",
+    "marked": "^9.1.6",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
@@ -116,8 +115,5 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  },
-  "engines": {
-    "node": "20.x"
   }
 }
