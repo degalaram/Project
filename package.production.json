@@ -8,9 +8,9 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "build": "esbuild server/backend-only.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs",
+    "build": "npx esbuild server/backend-only.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs",
     "start": "node dist/backend-only.mjs",
-    "db:push": "drizzle-kit push"
+    "db:push": "npx drizzle-kit push"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
