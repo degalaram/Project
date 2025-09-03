@@ -59,8 +59,8 @@ const Footer = () => {
 
           {/* Social Media & Contact */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
-            <div className="flex space-x-4 mb-4">
+            <h3 className="text-lg font-semibold mb-4 text-center md:text-left">Connect With Us</h3>
+            <div className="flex justify-center md:justify-start space-x-4 mb-4">
               <a
                 href="https://www.linkedin.com/in/ramdegala/"
                 target="_blank"
@@ -96,7 +96,7 @@ const Footer = () => {
                 <X className="w-5 h-5 text-white" />
               </a>
             </div>
-            <p className="text-gray-300 text-sm">
+            <p className="text-gray-300 text-sm text-center md:text-left">
               Email: ramdegala9@gmail.com
             </p>
           </div>
@@ -325,11 +325,62 @@ export default function Jobs() {
 
         {/* Job Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8">
-            <TabsTrigger value="all" data-testid="tab-all-jobs" onClick={() => navigate('/jobs?tab=all')}>All Jobs</TabsTrigger>
-            <TabsTrigger value="fresher" data-testid="tab-fresher-jobs" onClick={() => navigate('/jobs?tab=fresher')}>Fresher Jobs</TabsTrigger>
-            <TabsTrigger value="experienced" data-testid="tab-experienced-jobs" onClick={() => navigate('/jobs?tab=experienced')}>Experienced Jobs</TabsTrigger>
-            <TabsTrigger value="expired" data-testid="tab-expired-jobs" onClick={() => navigate('/jobs?tab=expired')}>Expired Jobs</TabsTrigger>
+          {/* Mobile: 2x2 Grid Layout */}
+          <div className="block sm:hidden mb-6">
+            <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
+              <button
+                onClick={() => { setActiveTab('all'); navigate('/jobs?tab=all'); }}
+                className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'all' 
+                    ? 'bg-primary text-primary-foreground shadow' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                data-testid="tab-all-jobs"
+              >
+                All Jobs
+              </button>
+              <button
+                onClick={() => { setActiveTab('fresher'); navigate('/jobs?tab=fresher'); }}
+                className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'fresher' 
+                    ? 'bg-primary text-primary-foreground shadow' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                data-testid="tab-fresher-jobs"
+              >
+                Fresher Jobs
+              </button>
+              <button
+                onClick={() => { setActiveTab('experienced'); navigate('/jobs?tab=experienced'); }}
+                className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'experienced' 
+                    ? 'bg-primary text-primary-foreground shadow' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                data-testid="tab-experienced-jobs"
+              >
+                Experienced Jobs
+              </button>
+              <button
+                onClick={() => { setActiveTab('expired'); navigate('/jobs?tab=expired'); }}
+                className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'expired' 
+                    ? 'bg-primary text-primary-foreground shadow' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                data-testid="tab-expired-jobs"
+              >
+                Expired Jobs
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop: Horizontal Layout */}
+          <TabsList className="hidden sm:grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
+            <TabsTrigger value="all" data-testid="tab-all-jobs-desktop" onClick={() => navigate('/jobs?tab=all')} className="text-sm px-3 py-2">All Jobs</TabsTrigger>
+            <TabsTrigger value="fresher" data-testid="tab-fresher-jobs-desktop" onClick={() => navigate('/jobs?tab=fresher')} className="text-sm px-3 py-2">Fresher Jobs</TabsTrigger>
+            <TabsTrigger value="experienced" data-testid="tab-experienced-jobs-desktop" onClick={() => navigate('/jobs?tab=experienced')} className="text-sm px-3 py-2">Experienced Jobs</TabsTrigger>
+            <TabsTrigger value="expired" data-testid="tab-expired-jobs-desktop" onClick={() => navigate('/jobs?tab=expired')} className="text-sm px-3 py-2">Expired Jobs</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab}>
@@ -529,9 +580,6 @@ export default function Jobs() {
           </TabsContent>
         </Tabs>
       </div>
-
-      
-
       <Footer />
     </div>
   );
