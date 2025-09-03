@@ -5,6 +5,7 @@ services:
     buildCommand: |
       cp package.production.json package.json &&
       npm install &&
+      chmod +x node_modules/.bin/* &&
       npm run build
     startCommand: npm start
     plan: free
