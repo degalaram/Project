@@ -1,6 +1,8 @@
 {
   "framework": null,
-  "outputDirectory": "dist",
+  "outputDirectory": "public/assets", // Change this to whatever your build outputs
+  "buildCommand": "your-build-command-here", // Replace with your build command if necessary
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -20,7 +22,7 @@
           "value": "*"
         },
         {
-          "key": "Access-Control-Allow-Methods",
+          "key": "Access-Control-Allow-Methods", 
           "value": "GET,POST,PUT,DELETE,OPTIONS"
         },
         {
