@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Fix __dirname equivalent for ESM
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
@@ -15,12 +14,12 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
   },
-  root: path.resolve(__dirname, "client"), // frontend root folder
+  root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "dist"), // ✅ final build will go into /dist
+    outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
-  base: "./", // ✅ important for correct asset paths in production
+  base: "./",
   server: {
     host: "0.0.0.0",
     port: 5000,
