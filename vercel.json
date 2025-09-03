@@ -1,7 +1,7 @@
 {
   "framework": null,
-  "outputDirectory": "public",  // Updated from "dist" to "public"
-  "buildCommand": "npm run build:frontend",  // Update this if your build command is different
+  "outputDirectory": "public",  
+  "buildCommand": "npm run build:frontend",  
   "installCommand": "npm install",
   "rewrites": [
     {
