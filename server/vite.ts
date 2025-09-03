@@ -25,11 +25,16 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-    allowedHosts: true as const,
-  };
+
+
+  
+// Key section - ensure allowedHosts is set for Replit proxy support
+const serverOptions = {
+  middlewareMode: true,
+  hmr: { server },
+  allowedHosts: true as const, // CRITICAL for Replit
+};
+  
 
   const vite = await createViteServer({
     ...viteConfig,
