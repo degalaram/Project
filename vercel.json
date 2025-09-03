@@ -1,12 +1,12 @@
 {
   "framework": null,
-  "outputDirectory": "public",  
-  "buildCommand": "npx vite build",  
+  "outputDirectory": "dist",  
+  "buildCommand": "npm run build:frontend",  
   "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://project-7-3h6.onrender.com/api/$1"
+      "destination": "https://YOUR_RENDER_APP_NAME.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
