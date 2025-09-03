@@ -48,101 +48,78 @@ const storage = {
   courses: new Map(),
   applications: new Map(),
   contacts: new Map(),
-  otps: new Map()
+  passwordResetOtps: new Map()
 };
 
-// Initialize sample data
-const initData = () => {
+// Initialize with sample data
+const initializeData = () => {
   // Sample companies
   const companies = [
-    { id: 'accenture', name: 'Accenture', description: 'Global professional services company', website: 'https://accenture.com', logo: '/images/accenture-logo.png' },
-    { id: 'tcs', name: 'Tata Consultancy Services', description: 'Leading IT services company', website: 'https://tcs.com', logo: '/images/tcs-logo.png' },
-    { id: 'infosys', name: 'Infosys', description: 'Global leader in consulting and technology services', website: 'https://infosys.com', logo: '/images/infosys-logo.png' }
+    {
+      id: "accenture-id",
+      name: "Accenture",
+      description: "A leading global professional services company",
+      website: "https://accenture.com",
+      linkedinUrl: "https://linkedin.com/company/accenture",
+      logo: "https://logoeps.com/wp-content/uploads/2014/05/36208-accenture-vector-logo.png",
+      location: "Bengaluru, India"
+    },
+    {
+      id: "tcs-id", 
+      name: "Tata Consultancy Services",
+      description: "An Indian multinational IT services and consulting company",
+      website: "https://tcs.com",
+      linkedinUrl: "https://linkedin.com/company/tcs",
+      logo: "/images/tcs-logo.png",
+      location: "Mumbai, India"
+    }
   ];
   
   companies.forEach(company => storage.companies.set(company.id, company));
-  
+
   // Sample jobs
   const jobs = [
     {
-      id: nanoid(),
-      title: 'Frontend Developer',
-      description: 'Build modern web applications using React and TypeScript',
-      requirements: 'React, TypeScript, HTML, CSS, JavaScript',
-      qualifications: 'Bachelor\'s degree in Computer Science',
-      skills: 'React, TypeScript, JavaScript, HTML, CSS',
-      experienceLevel: 'fresher',
+      id: "job-1",
+      companyId: "accenture-id",
+      title: "Software Developer - Fresh Graduate",
+      description: "Join our team as a Software Developer. Work on exciting projects with cutting-edge technologies.",
+      requirements: "Programming skills, Problem-solving abilities, Team collaboration",
+      qualifications: "Bachelor's degree in Computer Science or related field",
+      skills: "JavaScript, React, Node.js, Python, SQL",
+      experienceLevel: "fresher",
       experienceMin: 0,
       experienceMax: 2,
-      location: 'Bengaluru, India',
-      jobType: 'full-time',
-      salary: '₹4-6 LPA',
+      location: "Bengaluru, India",
+      jobType: "full-time",
+      salary: "₹4-6 LPA",
       closingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      batchEligible: '2024',
-      isActive: true,
-      companyId: 'accenture'
-    },
-    {
-      id: nanoid(),
-      title: 'Full Stack Developer',
-      description: 'Work on both frontend and backend technologies',
-      requirements: 'MERN Stack, Node.js, React, MongoDB',
-      qualifications: 'Bachelor\'s degree in IT/CS',
-      skills: 'React, Node.js, MongoDB, Express.js',
-      experienceLevel: 'entry',
-      experienceMin: 1,
-      experienceMax: 3,
-      location: 'Mumbai, India',
-      jobType: 'full-time',
-      salary: '₹6-8 LPA',
-      closingDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
-      batchEligible: '2023,2024',
-      isActive: true,
-      companyId: 'tcs'
+      batchEligible: "2024",
+      isActive: true
     }
   ];
   
   jobs.forEach(job => storage.jobs.set(job.id, job));
-  
+
   // Sample courses
   const courses = [
     {
-      id: nanoid(),
-      title: 'Complete Web Development',
-      description: 'Learn HTML, CSS, JavaScript and React',
-      instructor: 'John Doe',
-      duration: '12 weeks',
-      category: 'web-development',
-      price: 4999,
-      image: '/images/html-course.jpg',
-      isActive: true
-    },
-    {
-      id: nanoid(),
-      title: 'Python Programming',
-      description: 'Master Python from basics to advanced',
-      instructor: 'Jane Smith',
-      duration: '10 weeks',
-      category: 'programming',
-      price: 5999,
-      image: '/images/python-course.jpg',
-      isActive: true
+      id: "course-1",
+      title: "Full Stack Web Development",
+      description: "Learn to build complete web applications from scratch",
+      instructor: "John Doe",
+      duration: "12 weeks",
+      level: "beginner",
+      category: "web-development",
+      imageUrl: "/images/react-course.jpg",
+      price: "Free"
     }
   ];
   
   courses.forEach(course => storage.courses.set(course.id, course));
 };
 
-initData();
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    service: 'jobportal-backend'
-  });
-});
+initializeData();
 
 // Auth routes
 app.post("/api/auth/register", async (req, res) => {
@@ -177,7 +154,12 @@ app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
     const user = storage.users.get(email);
 
-    if (!user || !await bcryptjs.compare(password, user.password)) {
+    if (!user) {
+      return res.status(401).json({ message: "Wrong username or wrong password" });
+    }
+
+    const isValidPassword = await bcryptjs.compare(password, user.password);
+    if (!isValidPassword) {
       return res.status(401).json({ message: "Wrong username or wrong password" });
     }
 
@@ -189,44 +171,13 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Companies routes
-app.get("/api/companies", (req, res) => {
-  const companies = Array.from(storage.companies.values());
-  res.json(companies);
-});
-
-app.post("/api/companies", (req, res) => {
-  try {
-    const company = { id: nanoid(), ...req.body };
-    storage.companies.set(company.id, company);
-    res.json(company);
-  } catch (error) {
-    console.error("Error creating company:", error);
-    res.status(500).json({ message: "Failed to create company" });
-  }
-});
-
 // Jobs routes
 app.get("/api/jobs", (req, res) => {
   try {
-    const { experienceLevel, location, search } = req.query;
-    let jobs = Array.from(storage.jobs.values());
-    
-    if (experienceLevel) {
-      jobs = jobs.filter(job => job.experienceLevel === experienceLevel);
-    }
-    
-    if (location) {
-      jobs = jobs.filter(job => job.location.toLowerCase().includes(location.toLowerCase()));
-    }
-    
-    if (search) {
-      jobs = jobs.filter(job => 
-        job.title.toLowerCase().includes(search.toLowerCase()) ||
-        job.description.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    
+    const jobs = Array.from(storage.jobs.values()).map(job => {
+      const company = storage.companies.get(job.companyId);
+      return { ...job, company };
+    });
     res.json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -240,67 +191,29 @@ app.get("/api/jobs/:id", (req, res) => {
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
-    res.json(job);
+    const company = storage.companies.get(job.companyId);
+    res.json({ ...job, company });
   } catch (error) {
     console.error("Error fetching job:", error);
     res.status(500).json({ message: "Failed to fetch job" });
   }
 });
 
-app.post("/api/jobs", (req, res) => {
+// Companies routes
+app.get("/api/companies", (req, res) => {
   try {
-    const job = { 
-      id: nanoid(), 
-      ...req.body,
-      closingDate: new Date(req.body.closingDate),
-      createdAt: new Date()
-    };
-    storage.jobs.set(job.id, job);
-    res.json(job);
+    const companies = Array.from(storage.companies.values());
+    res.json(companies);
   } catch (error) {
-    console.error("Error creating job:", error);
-    res.status(500).json({ message: "Failed to create job" });
-  }
-});
-
-// Applications routes
-app.post("/api/applications", (req, res) => {
-  try {
-    const application = { 
-      id: nanoid(), 
-      ...req.body,
-      appliedAt: new Date(),
-      status: 'pending'
-    };
-    storage.applications.set(application.id, application);
-    res.json(application);
-  } catch (error) {
-    console.error("Error creating application:", error);
-    res.status(500).json({ message: "Failed to create application" });
-  }
-});
-
-app.get("/api/applications/user/:userId", (req, res) => {
-  try {
-    const applications = Array.from(storage.applications.values())
-      .filter(app => app.userId === req.params.userId);
-    res.json(applications);
-  } catch (error) {
-    console.error("Error fetching applications:", error);
-    res.status(500).json({ message: "Failed to fetch applications" });
+    console.error("Error fetching companies:", error);
+    res.status(500).json({ message: "Failed to fetch companies" });
   }
 });
 
 // Courses routes
 app.get("/api/courses", (req, res) => {
   try {
-    const { category } = req.query;
-    let courses = Array.from(storage.courses.values());
-    
-    if (category) {
-      courses = courses.filter(course => course.category === category);
-    }
-    
+    const courses = Array.from(storage.courses.values());
     res.json(courses);
   } catch (error) {
     console.error("Error fetching courses:", error);
@@ -337,6 +250,11 @@ app.post("/api/contact", (req, res) => {
   }
 });
 
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   const status = err.status || err.statusCode || 500;
@@ -350,7 +268,8 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Endpoint not found' });
 });
 
-const port = parseInt(process.env.PORT || '10000', 10);
+// FIXED: Use proper port for Render
+const port = parseInt(process.env.PORT || '5000', 10);
 const server = createServer(app);
 
 server.listen(port, '0.0.0.0', () => {
