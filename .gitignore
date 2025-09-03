@@ -1,31 +1,18 @@
 # Dependencies
 node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Production builds
-dist/
-build/
-
-# Environment variables
-.env
-.env.local
-.env.production
-.env.development
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs
-logs
-*.log
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -35,6 +22,16 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+*.lcov
+
+# Compiled binary addons (http://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -47,3 +44,35 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Replit files
+.replit
+replit.nix
+
+# DO NOT IGNORE dist/ - we want this for Vercel
+# dist/  <- REMOVED this line
