@@ -5,9 +5,8 @@ services:
     buildCommand: |
       cp package.production.json package.json &&
       npm install &&
-      chmod +x node_modules/.bin/* &&
-      npm run build
-    startCommand: npm start
+      node_modules/.bin/esbuild server/backend-only.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs
+    startCommand: node dist/backend-only.mjs
     plan: free
     envVars:
       - key: NODE_ENV
