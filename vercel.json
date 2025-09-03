@@ -1,7 +1,7 @@
 {
   "framework": null,
-  "outputDirectory": "public/assets", // Change this to whatever your build outputs
-  "buildCommand": "your-build-command-here", // Replace with your build command if necessary
+  "outputDirectory": "public",  // Updated from "dist" to "public"
+  "buildCommand": "npm run build:frontend",  // Update this if your build command is different
   "installCommand": "npm install",
   "rewrites": [
     {
@@ -22,7 +22,7 @@
           "value": "*"
         },
         {
-          "key": "Access-Control-Allow-Methods", 
+          "key": "Access-Control-Allow-Methods",
           "value": "GET,POST,PUT,DELETE,OPTIONS"
         },
         {
