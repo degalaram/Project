@@ -1,7 +1,7 @@
 {
   "framework": null,
-  "outputDirectory": "public",  
-  "buildCommand": "npm run build:frontend",  
+  "outputDirectory": "public",  // Use the correct output directory
+  "buildCommand": "npx vite build",  // Ensure Vite is executed with npx
   "installCommand": "npm install",
   "rewrites": [
     {
@@ -22,7 +22,7 @@
           "value": "*"
         },
         {
-          "key": "Access-Control-Allow-Methods",
+          "key": "Access-Control-Allow-Methods", 
           "value": "GET,POST,PUT,DELETE,OPTIONS"
         },
         {
