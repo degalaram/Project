@@ -8,15 +8,15 @@
     "npm": ">=9.0.0"
   },
  "scripts": {
-    
- 
+
+
+    "start": "node server/render-production.js",  // ✅ Perfect for Render
+    "build": "echo 'Using pre-built server/render-production.js for deployment'",  // ✅ No build needed
+    "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
     "start:dev": "npx cross-env NODE_ENV=production node dist/production.mjs",
     "build:frontend": "vite build",
     "check": "npx tsc",
-    "db:push": "npx drizzle-kit push",
-    "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
-    "build": "echo 'Using pre-built server/render-production.js for deployment'",
-    "start": "node server/render-production.js"
+    "db:push": "npx drizzle-kit push"
 
    
   },
