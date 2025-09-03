@@ -7,7 +7,7 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "scripts": {
+ "scripts": {
     "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
     "build": "echo 'Using pre-built server/render-production.js for deployment'",
     "start": "node server/render-production.js",
@@ -16,7 +16,6 @@
     "check": "npx tsc",
     "db:push": "npx drizzle-kit push"
   },
-  
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -123,3 +122,7 @@
     "bufferutil": "^4.0.8"
   }
 }
+
+
+
+
