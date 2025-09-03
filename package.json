@@ -1,11 +1,12 @@
 {
-  "name": "rest-express",
+   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
 "scripts": {
-    "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
-    "build": "npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs",
+   "dev": "npx cross-env NODE_ENV=development npx tsx server/index.ts",
+    "build": "vite build",
+    "build:server": "npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs",
     "start": "npx cross-env NODE_ENV=production node dist/production.mjs",
     "check": "npx tsc",
     "db:push": "npx drizzle-kit push"
@@ -119,4 +120,20 @@
 }
 
 
+
+
+
+
+
+
+
+
+
+
+{
+ 
+  "scripts": {
+   
+  }
+}
 
