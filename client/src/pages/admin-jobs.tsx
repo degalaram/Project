@@ -516,14 +516,18 @@ export default function AdminJobs() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="applyUrl">Apply URL</Label>
+                  <Label htmlFor="applyUrl">Apply URL *</Label>
                   <Input
                     id="applyUrl"
                     value={formData.applyUrl || ''}
                     onChange={(e) => handleChange('applyUrl', e.target.value)}
                     placeholder="https://company.com/careers/apply"
+                    required
                     data-testid="job-apply-url-input"
                   />
+                  <p className="text-sm text-gray-600">
+                    Direct link where candidates can apply for this job
+                  </p>
                 </div>
 
                 <div className="space-y-2">
