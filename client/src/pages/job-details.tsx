@@ -286,33 +286,18 @@ export default function JobDetails() {
                   </div>
                 ) : (
                   <>
-                    {job.applyUrl ? (
-                      <Button 
-                        className="w-full" 
-                        size="lg"
-                        onClick={() => {
-                          // Track application internally
-                          applyMutation.mutate();
-                          // Open external application URL
-                          window.open(job.applyUrl!, '_blank');
-                        }}
-                        disabled={applyMutation.isPending}
-                        data-testid="apply-now-button"
-                      >
-                        {applyMutation.isPending ? 'Opening Application...' : 'Apply Now'}
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
-                    ) : (
-                      <Button 
-                        className="w-full" 
-                        size="lg"
-                        onClick={() => applyMutation.mutate()}
-                        disabled={applyMutation.isPending}
-                        data-testid="apply-now-button"
-                      >
-                        {applyMutation.isPending ? 'Applying...' : 'Apply Now'}
-                      </Button>
-                    )}
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => {
+                        // Navigate to external job application URL
+                        window.open(job.applyUrl || job.company.website || 'https://google.com/search?q=' + encodeURIComponent(job.company.name + ' careers'), '_blank');
+                      }}
+                      data-testid="apply-now-button"
+                    >
+                      Apply Now
+                      <ExternalLink className="w-4 h-4 ml-2" />
+                    </Button>
                   </>
                 )}
               </CardContent>
