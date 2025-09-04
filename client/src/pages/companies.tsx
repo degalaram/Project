@@ -175,15 +175,11 @@ export default function Companies() {
   });
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const deleteMutation = useMutation({
     mutationFn: async (companyId: string) => {
-      const response = await fetch(`/api/companies/${companyId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete company');
-      }
+      const response = await apiRequest('DELETE', `/api/companies/${companyId}`);
       return response.json();
     },
     onSuccess: () => {
