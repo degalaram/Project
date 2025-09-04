@@ -1,8 +1,8 @@
 {
   "framework": null,
-  "buildCommand": "npm run build:frontend",
+  "buildCommand": "cp package.frontend.json package.json && npm install && npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install --include=dev",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/(.*)",
