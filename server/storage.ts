@@ -847,4 +847,199 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Import database connection
+import { db } from "./db.js";
+import * as schema from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+// Database storage implementation using Drizzle ORM
+export class DbStorage implements IStorage {
+  // Auth methods
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    return users[0];
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    return users[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const hashedPassword = await bcrypt.hash(user.password, 12);
+    const userData = {
+      ...user,
+      password: hashedPassword,
+    };
+    const [newUser] = await db.insert(schema.users).values(userData).returning();
+    return newUser;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(schema.users)
+      .set(updates)
+      .where(eq(schema.users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async validateUser(email: string, password: string): Promise<User | undefined> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return undefined;
+
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : undefined;
+  }
+
+  async updateUserPassword(email: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db.update(schema.users)
+      .set({ password: hashedPassword })
+      .where(eq(schema.users.email, email));
+  }
+
+  // Company methods
+  async getCompanies(): Promise<Company[]> {
+    return await db.select().from(schema.companies);
+  }
+
+  async getCompany(id: string): Promise<Company | undefined> {
+    const companies = await db.select().from(schema.companies).where(eq(schema.companies.id, id));
+    return companies[0];
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const [company] = await db.insert(schema.companies).values(insertCompany).returning();
+    return company;
+  }
+
+  async deleteCompany(id: string): Promise<boolean> {
+    // First, delete all jobs associated with this company
+    await db.delete(schema.jobs).where(eq(schema.jobs.companyId, id));
+    
+    // Then delete the company
+    const result = await db.delete(schema.companies).where(eq(schema.companies.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Job methods
+  async getJobs(filters?: { experienceLevel?: string; location?: string; search?: string }): Promise<(Job & { company: Company })[]> {
+    // This is a simplified version - you might want to add proper filtering with Drizzle
+    const jobsWithCompanies = await db
+      .select()
+      .from(schema.jobs)
+      .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id));
+    
+    return jobsWithCompanies.map(row => ({
+      ...row.jobs,
+      company: row.companies!
+    }));
+  }
+
+  async getJob(id: string): Promise<(Job & { company: Company }) | undefined> {
+    const result = await db
+      .select()
+      .from(schema.jobs)
+      .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id))
+      .where(eq(schema.jobs.id, id));
+    
+    if (!result[0]) return undefined;
+    
+    return {
+      ...result[0].jobs,
+      company: result[0].companies!
+    };
+  }
+
+  async createJob(insertJob: InsertJob): Promise<Job> {
+    const [job] = await db.insert(schema.jobs).values(insertJob).returning();
+    return job;
+  }
+
+  async updateJob(id: string, updates: Partial<InsertJob>): Promise<Job | undefined> {
+    const [updatedJob] = await db.update(schema.jobs)
+      .set(updates)
+      .where(eq(schema.jobs.id, id))
+      .returning();
+    return updatedJob;
+  }
+
+  // Application methods
+  async createApplication(application: InsertApplication): Promise<Application> {
+    const [app] = await db.insert(schema.applications).values(application).returning();
+    return app;
+  }
+
+  async getUserApplications(userId: string): Promise<(Application & { job: Job & { company: Company } })[]> {
+    // Simplified version - you might want to improve this query
+    const apps = await db.select().from(schema.applications).where(eq(schema.applications.userId, userId));
+    const result = [];
+    
+    for (const app of apps) {
+      const job = await this.getJob(app.jobId);
+      if (job) {
+        result.push({
+          ...app,
+          job
+        });
+      }
+    }
+    
+    return result;
+  }
+
+  async deleteApplication(id: string): Promise<void> {
+    await db.delete(schema.applications).where(eq(schema.applications.id, id));
+  }
+
+  // Course methods
+  async getCourses(category?: string): Promise<Course[]> {
+    if (category) {
+      return await db.select().from(schema.courses).where(eq(schema.courses.category, category));
+    }
+    return await db.select().from(schema.courses);
+  }
+
+  async getCourse(id: string): Promise<Course | undefined> {
+    const courses = await db.select().from(schema.courses).where(eq(schema.courses.id, id));
+    return courses[0];
+  }
+
+  async createCourse(insertCourse: InsertCourse): Promise<Course> {
+    const [course] = await db.insert(schema.courses).values(insertCourse).returning();
+    return course;
+  }
+
+  // Contact methods
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const [contact] = await db.insert(schema.contacts).values(insertContact).returning();
+    return contact;
+  }
+
+  // Password reset methods (using in-memory for now - in production you'd use Redis or database)
+  private passwordResetOtps = new Map<string, { otp: string; expiresAt: Date }>();
+
+  async storePasswordResetOtp(email: string, otp: string): Promise<void> {
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    this.passwordResetOtps.set(email, { otp, expiresAt });
+  }
+
+  async verifyPasswordResetOtp(email: string, otp: string): Promise<boolean> {
+    const stored = this.passwordResetOtps.get(email);
+    if (!stored) return false;
+
+    if (new Date() > stored.expiresAt) {
+      this.passwordResetOtps.delete(email);
+      return false;
+    }
+
+    return stored.otp === otp;
+  }
+
+  async clearPasswordResetOtp(email: string): Promise<void> {
+    this.passwordResetOtps.delete(email);
+  }
+}
+
+// Use database storage if DATABASE_URL is available, otherwise fall back to MemStorage
+export const storage = process.env.DATABASE_URL ? new DbStorage() : new MemStorage();
