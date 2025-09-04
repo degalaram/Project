@@ -3,10 +3,9 @@ services:
     name: jobportal-backend
     env: node
     buildCommand: |
-      cp package.production.json package.json &&
-      npm install &&
-      npx esbuild server/backend-only.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --out-extension:.js=.mjs
-    startCommand: node dist/backend-only.mjs
+      cp package.render.json package.json &&
+      npm install --only=production --no-optional --no-audit --no-fund
+    startCommand: npm start
     plan: free
     envVars:
       - key: NODE_ENV
@@ -15,5 +14,3 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-
-
