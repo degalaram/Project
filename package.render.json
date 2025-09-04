@@ -8,7 +8,8 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "start": "node server/render-production.js"
+    "start": "node server/render-production.js",
+    "postinstall": "echo 'No build step required - using pre-built production server'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -18,8 +19,3 @@
     "nanoid": "^5.1.5"
   }
 }
-
-
-
-
-
