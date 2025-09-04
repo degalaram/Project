@@ -20,7 +20,7 @@ const corsOptions = {
   origin: process.env.FRONTEND_URL || [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://your-vercel-app.vercel.app'
+    'https://jazzy-pithivier-c3078b.netlify.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -53,6 +53,51 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'jobportal-backend'
   });
+});
+
+// Admin verification endpoints - CRITICAL for admin functionality
+app.post("/api/admin/verify-password", async (req, res) => {
+  try {
+    const { password } = req.body;
+    const ADMIN_PASSWORD = '161417';
+    
+    console.log('Admin verification attempt:', password);
+    
+    if (password === ADMIN_PASSWORD) {
+      console.log('Admin verification successful');
+      res.json({ success: true, message: 'Admin verified' });
+    } else {
+      console.log('Admin verification failed');
+      res.status(401).json({ success: false, message: 'Invalid admin password' });
+    }
+  } catch (error) {
+    console.error("Admin verification error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.post("/api/admin/send-recovery-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const ADMIN_EMAIL = 'ramdegala3@gmail.com';
+    
+    if (email === ADMIN_EMAIL) {
+      // Generate recovery OTP
+      const recoveryOtp = '161417'; // Use same as admin password for simplicity
+      console.log(`Admin recovery OTP: ${recoveryOtp}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Recovery OTP sent',
+        note: 'Check console logs for OTP' 
+      });
+    } else {
+      res.status(401).json({ success: false, message: 'Unauthorized email' });
+    }
+  } catch (error) {
+    console.error("Recovery OTP error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // Auth routes
@@ -110,6 +155,21 @@ app.post("/api/companies", async (req, res) => {
   } catch (error) {
     console.error("Error creating company:", error);
     res.status(500).json({ message: "Failed to create company" });
+  }
+});
+
+app.delete("/api/companies/:id", async (req, res) => {
+  try {
+    const companyId = req.params.id;
+    const deleted = await storage.deleteCompany(companyId);
+    if (deleted) {
+      res.json({ message: "Company deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Company not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    res.status(500).json({ message: "Failed to delete company" });
   }
 });
 
