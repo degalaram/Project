@@ -290,12 +290,15 @@ export default function JobDetails() {
                       className="w-full" 
                       size="lg"
                       onClick={() => {
-                        // Navigate to external job application URL
+                        // Track internal application
+                        applyMutation.mutate();
+                        // Also open external job application URL in new tab
                         window.open(job.applyUrl || job.company.website || 'https://google.com/search?q=' + encodeURIComponent(job.company.name + ' careers'), '_blank');
                       }}
+                      disabled={applyMutation.isPending}
                       data-testid="apply-now-button"
                     >
-                      Apply Now
+                      {applyMutation.isPending ? 'Applying...' : 'Apply Now'}
                       <ExternalLink className="w-4 h-4 ml-2" />
                     </Button>
                   </>
