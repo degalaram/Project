@@ -14,7 +14,10 @@ const corsOptions = {
   origin: process.env.FRONTEND_URL || [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://your-vercel-app.vercel.app'
+    'http://localhost:5000',
+    /\.netlify\.app$/,
+    /\.vercel\.app$/,
+    /\.onrender\.com$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -231,6 +234,82 @@ app.get("/api/courses/:id", (req, res) => {
   } catch (error) {
     console.error("Error fetching course:", error);
     res.status(500).json({ message: "Failed to fetch course" });
+  }
+});
+
+// Admin password verification endpoint
+app.post("/api/admin/verify-password", async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ success: false, message: "Password is required" });
+    }
+
+    // SECURITY: Encrypted password verification - NO plaintext passwords
+    const { createHash } = await import('crypto');
+    const inputHash = createHash('sha256').update(password + 'jobportal_secure_2024').digest('hex');
+    const correctHash = 'a223ba8073ffd61e2c4705bebb65d938f4073142369998524bb5293c9f1534ad'; // Secure hash
+
+    console.log('🔐 Admin access attempt - verifying credentials...');
+    console.log('🔒 Security check:', inputHash.slice(0, 8) + '****');
+
+    if (inputHash === correctHash) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid password" });
+    }
+  } catch (error) {
+    console.error("Error verifying admin password:", error);
+    res.status(500).json({ success: false, message: "Failed to verify password" });
+  }
+});
+
+// Company creation endpoint
+app.post("/api/companies", (req, res) => {
+  try {
+    const company = { 
+      id: nanoid(), 
+      ...req.body,
+      createdAt: new Date()
+    };
+    storage.companies.set(company.id, company);
+    res.json(company);
+  } catch (error) {
+    console.error("Error creating company:", error);
+    res.status(500).json({ message: "Failed to create company" });
+  }
+});
+
+// Job creation endpoint
+app.post("/api/jobs", (req, res) => {
+  try {
+    const job = { 
+      id: nanoid(), 
+      ...req.body,
+      createdAt: new Date()
+    };
+    storage.jobs.set(job.id, job);
+    res.json(job);
+  } catch (error) {
+    console.error("Error creating job:", error);
+    res.status(500).json({ message: "Failed to create job" });
+  }
+});
+
+// Application creation endpoint
+app.post("/api/applications", (req, res) => {
+  try {
+    const application = { 
+      id: nanoid(), 
+      ...req.body,
+      appliedAt: new Date()
+    };
+    storage.applications.set(application.id, application);
+    res.json(application);
+  } catch (error) {
+    console.error("Error creating application:", error);
+    res.status(500).json({ message: "Failed to create application" });
   }
 });
 
