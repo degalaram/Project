@@ -4,9 +4,11 @@ services:
     env: node
     buildCommand: |
       cp package.render.json package.json &&
-      npm install --only=production --no-optional --no-audit --no-fund
-    startCommand: npm start
+      npm install --only=production --no-optional --no-audit --no-fund --ignore-scripts
+    startCommand: node server/render-production.js
     plan: free
+    region: oregon
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
