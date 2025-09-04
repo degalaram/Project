@@ -25,6 +25,7 @@ export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompany(id: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
+  deleteCompany(id: string): Promise<boolean>;
 
   // Jobs
   getJobs(filters?: { experienceLevel?: string; location?: string; search?: string }): Promise<(Job & { company: Company })[]>;
