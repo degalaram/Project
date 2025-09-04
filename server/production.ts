@@ -13,10 +13,13 @@ const app = express();
 
 // CORS configuration for Vercel frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'https://your-app.vercel.app'],
+  origin: process.env.FRONTEND_URL || [
+    'http://localhost:3000', 
+    'https://radiant-seahorse-de2cf9.netlify.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 app.use(express.json({ limit: '10mb' }));
