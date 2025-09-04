@@ -33,7 +33,7 @@ export function Footer() {
           {/* Social Media & Contact */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
-            <div className="flex space-x-4 mb-4">
+            <div className="flex justify-center md:justify-start space-x-4 mb-4">
               <a
                 href="https://www.linkedin.com/in/ramdegala/"
                 target="_blank"
