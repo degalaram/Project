@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "installCommand": "npm install @vitejs/plugin-react vite tailwindcss postcss autoprefixer @types/react @types/react-dom typescript",
   "env": {
-    "VITE_API_BASE_URL": "https://project-6-q2yq.onrender.com/"
+    "VITE_API_BASE_URL": "https://project-eks8.onrender.com"
     
   },
   "rewrites": [
