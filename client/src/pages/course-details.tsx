@@ -41,12 +41,12 @@ interface CourseData {
 export default function CourseDetails() {
   const [, navigate] = useLocation();
   const [match] = useRoute('/courses/:id');
-  const courseId = match?.id;
+  const courseId = match && typeof match === 'object' && 'id' in match ? match.id : null;
 
   // If no courseId from route, try to get it from URL pathname
   const currentPath = window.location.pathname;
-  const pathCourseId = currentPath.split('/courses/')[1];
-  const finalCourseId = courseId || pathCourseId;
+  const pathCourseId = currentPath.split('/courses/')[1]?.split('?')[0]; // Remove query params if any
+  const finalCourseId = courseId || pathCourseId || '';
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -374,7 +374,7 @@ export default function CourseDetails() {
   const course = getCourseData(finalCourseId || '');
   
   const getCourseImage = (courseId: string) => {
-    const imageMap = {
+    const imageMap: Record<string, string> = {
       'html-css': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop',
       'javascript': 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=400&fit=crop',
       'react': 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop',
@@ -414,7 +414,7 @@ export default function CourseDetails() {
   };
 
   const getSkillIcon = (skill: string) => {
-    const skillIcons = {
+    const skillIcons: Record<string, string> = {
       'HTML5': '🌐',
       'CSS3': '🎨',
       'JavaScript ES6+': '⚡',
