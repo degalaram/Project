@@ -119,7 +119,7 @@ export default function Courses() {
   };
 
   const getCourseImage = (courseId: string) => {
-    const imageMap = {
+    const imageMap: Record<string, string> = {
       'html-css': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop',
       'javascript': 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=300&fit=crop',
       'react': 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop',
@@ -243,7 +243,10 @@ export default function Courses() {
                       onError={(e) => {
                         // Fallback to gradient if image fails to load
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (nextElement) {
+                          nextElement.style.display = 'flex';
+                        }
                       }}
                     />
                     <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 to-purple-600 hidden items-center justify-center">
