@@ -1043,4 +1043,5 @@ export class DbStorage implements IStorage {
 }
 
 // Use database storage if DATABASE_URL is available, otherwise fall back to MemStorage
-export const storage = process.env.DATABASE_URL ? new DbStorage() : new MemStorage();
+// For development in Replit, force MemStorage until database is properly configured
+export const storage = process.env.NODE_ENV === 'production' && process.env.DATABASE_URL ? new DbStorage() : new MemStorage();
