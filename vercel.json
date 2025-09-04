@@ -1,10 +1,10 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build:frontend",
+  "framework": null,
+  "buildCommand": "npm install @vitejs/plugin-react vite typescript && npx vite build --config vite.config.ts",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install @vitejs/plugin-react vite tailwindcss postcss autoprefixer @types/react @types/react-dom typescript",
   "env": {
-    "VITE_API_BASE_URL": "https://project-5-cg4n.onrender.com"
+    "VITE_API_BASE_URL": "https://project-6-q2yq.onrender.com/"
   },
   "rewrites": [
     {
