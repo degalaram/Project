@@ -11,7 +11,7 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:5000',
-    'https://radiant-seahorse-de2cf9.netlify.app/'
+    'https://radiant-seahorse-de2cf9.netlify.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
