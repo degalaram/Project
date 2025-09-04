@@ -105,8 +105,8 @@ export default function Courses() {
   });
 
   const handleCourseClick = (course: any) => {
-    // Use window.location.href for proper navigation
-    window.location.href = `/courses/${course.id}`;
+    // Use wouter navigation for proper SPA routing
+    navigate(`/courses/${course.id}`);
   };
 
   const getLevelColor = (level: string) => {
@@ -341,7 +341,7 @@ export default function Courses() {
                         className="text-xs sm:text-sm px-2 sm:px-4"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.location.href = `/courses/${course.id}`;
+                          navigate(`/courses/${course.id}`);
                         }}
                         data-testid={`enroll-course-${course.id}`}
                       >
