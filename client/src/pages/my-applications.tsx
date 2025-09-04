@@ -109,8 +109,8 @@ export default function MyApplications() {
               <p className="text-gray-600 mt-2">Track and manage your job applications</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-blue-600">{applicationsWithJobs.length}</div>
-              <div className="text-sm text-gray-600">Total Applications</div>
+              <div className="text-4xl font-bold text-blue-600">{applicationsWithJobs.length}</div>
+              <div className="text-sm text-gray-600 font-medium">Total Applications</div>
             </div>
           </div>
         </div>
