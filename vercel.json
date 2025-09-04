@@ -1,8 +1,8 @@
 {
   "framework": null,
-  "buildCommand": "npx vite build",
+  "buildCommand": "npm run build:frontend",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "rewrites": [
     {
       "source": "/(.*)",
