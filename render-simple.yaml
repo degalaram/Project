@@ -4,7 +4,7 @@ services:
     env: node
     buildCommand: |
       cp package.render.json package.json &&
-      npm install
+      npm install --only=production --no-optional --no-audit --no-fund
     startCommand: npm start
     plan: free
     envVars:
