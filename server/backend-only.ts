@@ -20,7 +20,10 @@ const corsOptions = {
   origin: process.env.FRONTEND_URL || [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://jazzy-pithivier-c3078b.netlify.app'
+    'http://localhost:5000',
+    /\.netlify\.app$/,
+    /\.vercel\.app$/,
+    /\.onrender\.com$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
