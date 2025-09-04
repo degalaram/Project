@@ -240,6 +240,17 @@ app.get("/api/applications/user/:userId", async (req, res) => {
   }
 });
 
+app.delete("/api/applications/:id", async (req, res) => {
+  try {
+    const applicationId = req.params.id;
+    await storage.deleteApplication(applicationId);
+    res.json({ message: "Application removed successfully" });
+  } catch (error) {
+    console.error("Error deleting application:", error);
+    res.status(500).json({ message: "Failed to delete application" });
+  }
+});
+
 // Courses routes
 app.get("/api/courses", async (req, res) => {
   try {
