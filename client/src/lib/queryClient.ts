@@ -18,6 +18,11 @@ export async function apiRequest(
   // Prepend API base URL if it's set and URL is relative
   const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
   
+  // Log API calls in development for debugging
+  if (import.meta.env.DEV) {
+    console.log(`API ${method} ${fullUrl}`);
+  }
+  
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -38,6 +43,11 @@ export const getQueryFn: <T>(options: {
     // Prepend API base URL if it's set and URL is relative
     const url = queryKey.join("/") as string;
     const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
+    
+    // Log API calls in development for debugging
+    if (import.meta.env.DEV) {
+      console.log(`API GET ${fullUrl}`);
+    }
     
     const res = await fetch(fullUrl, {
       credentials: "include",
