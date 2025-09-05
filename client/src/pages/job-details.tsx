@@ -181,15 +181,15 @@ export default function JobDetails() {
                     <span className="text-sm">Experience: {job.experienceMin}-{job.experienceMax} years</span>
                   </div>
                   <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2 text-orange-600" />
-                    <span className="text-sm">
-                      Closes: {new Date(job.closingDate).toLocaleDateString('en-GB')}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
                     <Clock className="w-4 h-4 mr-2 text-gray-500" />
                     <span className="text-sm">
                       Posted: {new Date(job.createdAt || new Date()).toLocaleDateString('en-GB')}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2 text-orange-600" />
+                    <span className="text-sm">
+                      Closes: {new Date(job.closingDate).toLocaleDateString('en-GB')}
                     </span>
                   </div>
                 </div>
@@ -290,10 +290,12 @@ export default function JobDetails() {
                       className="w-full" 
                       size="lg"
                       onClick={() => {
+                        // Open job application URL in new tab first
+                        if (job.applyUrl) {
+                          window.open(job.applyUrl, '_blank');
+                        }
                         // Track internal application
                         applyMutation.mutate();
-                        // Also open external job application URL in new tab
-                        window.open(job.applyUrl || job.company.website || 'https://google.com/search?q=' + encodeURIComponent(job.company.name + ' careers'), '_blank');
                       }}
                       disabled={applyMutation.isPending}
                       data-testid="apply-now-button"
