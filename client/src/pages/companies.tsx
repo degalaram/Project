@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -182,23 +182,40 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Reset form data when dialog opens or company changes
+  useEffect(() => {
+    setFormData({
+      name: company.name,
+      description: company.description || '',
+      website: company.website || '',
+      linkedinUrl: company.linkedinUrl || '',
+      logo: company.logo || '',
+      location: company.location || '',
+    });
+  }, [company, open]);
+
   const updateCompanyMutation = useMutation({
     mutationFn: async (data: InsertCompany) => {
       const response = await apiRequest('PUT', `/api/companies/${company.id}`, data);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update company: ${errorText}`);
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedCompany) => {
       toast({
         title: 'Company updated successfully',
-        description: 'The company details have been updated.',
+        description: 'The company details have been updated in the database.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
       setOpen(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Company update error:', error);
       toast({
         title: 'Failed to update company',
-        description: error.message,
+        description: error.message || 'An error occurred while updating the company.',
         variant: 'destructive',
       });
     },
@@ -328,19 +345,24 @@ export default function Companies() {
   const deleteMutation = useMutation({
     mutationFn: async (companyId: string) => {
       const response = await apiRequest('DELETE', `/api/companies/${companyId}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete company: ${errorText}`);
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
       toast({
-        title: "Company deleted",
-        description: "Company has been successfully removed.",
+        title: "Company deleted successfully",
+        description: "The company and all associated jobs have been removed from the database.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Company delete error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Failed to delete company",
+        description: error.message || 'An error occurred while deleting the company.',
         variant: "destructive",
       });
     },
