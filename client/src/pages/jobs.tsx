@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { Navbar } from '@/components/job-portal/navbar';
 import {
   Search,
@@ -169,6 +171,8 @@ export default function Jobs() {
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Check if user is logged in
   useEffect(() => {
@@ -201,6 +205,32 @@ export default function Jobs() {
     }
   }, [applications]);
 
+  // Application mutation
+  const applyMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await apiRequest('POST', '/api/applications', {
+        userId: user.id,
+        jobId: jobId,
+      });
+      return response.json();
+    },
+    onSuccess: (data, jobId) => {
+      setAppliedJobs(prev => [...prev, jobId]);
+      queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
+      toast({
+        title: 'Application submitted!',
+        description: 'Your application has been sent to the company. Check "My Applications" to track status.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Application failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const filteredJobs = Array.isArray(allJobs) ? allJobs.filter((job: JobWithCompany) => {
     const matchesSearch = searchTerm === '' ||
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -229,6 +259,22 @@ export default function Jobs() {
 
   const handleJobClick = (jobId: string) => {
     navigate(`/jobs/${jobId}`);
+  };
+
+  const handleApplyJob = async (e: React.MouseEvent, job: JobWithCompany) => {
+    e.stopPropagation();
+    
+    // Open the job application URL in a new tab
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank');
+    }
+    
+    // Submit the application to track it
+    try {
+      await applyMutation.mutateAsync(job.id);
+    } catch (error) {
+      // Error is already handled by the mutation onError callback
+    }
   };
 
   const handleShare = (e: React.MouseEvent, job: JobWithCompany, platform: string) => {
@@ -412,27 +458,28 @@ export default function Jobs() {
                       data-testid={`job-card-${job.id}`}
                     >
                       <CardContent className="p-4 sm:p-6">
-                        {/* Header Section */}
+                        {/* Header Section with Company Images */}
                         <CardHeader className="pb-4">
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-start flex-1">
-                              <div className="w-12 h-12 md:w-16 md:h-16 bg-white dark:bg-white border rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm company-logo-container mr-4">
+                              {/* Left side - Company Image */}
+                              <div className="w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md company-logo-container mr-4">
                                 {job.company.logo || getCompanyLogo(job.company) ? (
                                   <img 
                                     src={job.company.logo || getCompanyLogo(job.company)!} 
                                     alt={job.company.name}
-                                    className="w-10 h-10 md:w-14 md:h-14 object-contain rounded"
+                                    className="w-14 h-14 md:w-18 md:h-18 object-contain rounded-lg"
                                     onError={(e) => {
                                       const target = e.target as HTMLImageElement;
                                       const parent = target.parentElement;
                                       if (parent) {
-                                        parent.innerHTML = `<div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-lg font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
+                                        parent.innerHTML = `<div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-2xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
                                       }
                                     }}
                                   />
                                 ) : (
-                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <span className="text-lg font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
+                                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
                                   </div>
                                 )}
                               </div>
@@ -447,9 +494,27 @@ export default function Jobs() {
                                 </p>
                               </div>
                             </div>
-                            <Badge className={getLevelColor(job.experienceLevel)}>
-                              {job.experienceLevel}
-                            </Badge>
+                            {/* Right side - Company Image (Larger) */}
+                            <div className="w-20 h-20 md:w-28 md:h-28 bg-white dark:bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
+                              {job.company.logo || getCompanyLogo(job.company) ? (
+                                <img 
+                                  src={job.company.logo || getCompanyLogo(job.company)!} 
+                                  alt={job.company.name}
+                                  className="w-18 h-18 md:w-24 md:h-24 object-contain rounded-lg"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `<div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-3xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center">
+                                  <span className="text-3xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </CardHeader>
 
@@ -489,56 +554,39 @@ export default function Jobs() {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-gray-100 space-y-3 sm:space-y-0">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-1">
                             {/* Share Buttons */}
-                            <div className="flex items-center space-x-2 mb-2 sm:mb-0">
-                              <button
-                                onClick={(e) => handleShare(e, job, 'whatsapp')}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
-                                title="Share on WhatsApp"
-                                data-testid={`share-whatsapp-${job.id}`}
-                              >
-                                <FaWhatsapp className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'telegram')}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                title="Share on Telegram"
-                                data-testid={`share-telegram-${job.id}`}
-                              >
-                                <FaTelegram className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'instagram')}
-                                className="p-2 text-pink-600 hover:bg-pink-50 rounded-full transition-colors"
-                                title="Share on Instagram"
-                                data-testid={`share-instagram-${job.id}`}
-                              >
-                                <Instagram className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'gmail')}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                title="Share via Gmail"
-                                data-testid={`share-gmail-${job.id}`}
-                              >
-                                <Mail className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'copy')}
-                                className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
-                                title="Copy Link"
-                                data-testid={`share-copy-${job.id}`}
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </button>
-                            </div>
+                            <button
+                              onClick={(e) => handleShare(e, job, 'whatsapp')}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                              title="Share on WhatsApp"
+                              data-testid={`share-whatsapp-${job.id}`}
+                            >
+                              <FaWhatsapp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleShare(e, job, 'telegram')}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                              title="Share on Telegram"
+                              data-testid={`share-telegram-${job.id}`}
+                            >
+                              <FaTelegram className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleShare(e, job, 'copy')}
+                              className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                              title="Copy Link"
+                              data-testid={`share-copy-${job.id}`}
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
                           </div>
 
-                          <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
-                            {isApplied && (
-                              <span className="text-sm text-green-600 font-medium">Applied</span>
-                            )}
+                          <div className="flex items-center space-x-3">
+                            {/* Experience Level and View Details */}
+                            <Badge className={getLevelColor(job.experienceLevel)}>
+                              {job.experienceLevel}
+                            </Badge>
                             <Button
                               variant="outline"
                               size="sm"
@@ -552,22 +600,22 @@ export default function Jobs() {
                               <Eye className="w-4 h-4" />
                               <span>View Details</span>
                             </Button>
-                            {!isApplied && !isExpired && (
+                            {isApplied ? (
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                <span className="text-sm text-green-600 font-medium">Applied</span>
+                              </div>
+                            ) : !isExpired ? (
                               <Button
                                 size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (job.applyUrl) {
-                                    window.open(job.applyUrl, '_blank');
-                                  } else {
-                                    handleJobClick(job.id);
-                                  }
-                                }}
+                                onClick={(e) => handleApplyJob(e, job)}
                                 className="bg-blue-600 hover:bg-blue-700"
                                 data-testid={`apply-now-${job.id}`}
                               >
                                 Apply Now
                               </Button>
+                            ) : (
+                              <span className="text-sm text-gray-500">Expired</span>
                             )}
                           </div>
                         </div>
