@@ -422,7 +422,7 @@ export default function Jobs() {
           </div>
 
           {/* Desktop: Horizontal Layout */}
-          <TabsList className="hidden sm:grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
+          <TabsList className="hidden sm:grid w-full grid-cols-4 mb-4 sm:mb-6 md:mb-8 h-auto p-1">
             <TabsTrigger value="all" data-testid="tab-all-jobs-desktop" onClick={() => navigate('/jobs?tab=all')} className="text-sm px-3 py-2">All Jobs</TabsTrigger>
             <TabsTrigger value="fresher" data-testid="tab-fresher-jobs-desktop" onClick={() => navigate('/jobs?tab=fresher')} className="text-sm px-3 py-2">Fresher Jobs</TabsTrigger>
             <TabsTrigger value="experienced" data-testid="tab-experienced-jobs-desktop" onClick={() => navigate('/jobs?tab=experienced')} className="text-sm px-3 py-2">Experienced Jobs</TabsTrigger>
@@ -430,7 +430,7 @@ export default function Jobs() {
           </TabsList>
 
           <TabsContent value={activeTab}>
-            <div className="grid gap-6">
+            <div className="space-y-3 sm:space-y-4 md:space-y-6">
               {filteredJobs.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
@@ -453,140 +453,133 @@ export default function Jobs() {
                   return (
                     <Card
                       key={job.id}
-                      className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-blue-500 mx-2 sm:mx-0"
+                      className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-blue-500 w-full"
                       onClick={() => handleJobClick(job.id)}
                       data-testid={`job-card-${job.id}`}
                     >
-                      <CardContent className="p-4 sm:p-6">
-                        {/* Header Section with Company Images */}
-                        <CardHeader className="pb-4">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-start flex-1">
-                              {/* Left side - Company Image */}
-                              <div className="w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md company-logo-container mr-4">
-                                {job.company.logo || getCompanyLogo(job.company) ? (
-                                  <img 
-                                    src={job.company.logo || getCompanyLogo(job.company)!} 
-                                    alt={job.company.name}
-                                    className="w-14 h-14 md:w-18 md:h-18 object-contain rounded-lg"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      const parent = target.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-2xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                    <span className="text-2xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
-                                  </div>
-                                )}
+                      <CardContent className="p-3 sm:p-4 md:p-6">
+                        {/* Mobile-Optimized Header */}
+                        <div className="flex items-start space-x-3 mb-4">
+                          {/* Single Company Logo - Responsive Size */}
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white border-2 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            {job.company.logo || getCompanyLogo(job.company) ? (
+                              <img 
+                                src={job.company.logo || getCompanyLogo(job.company)!} 
+                                alt={job.company.name}
+                                className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain rounded"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `<div class="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-sm sm:text-lg md:text-xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <span className="text-sm sm:text-lg md:text-xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
                               </div>
-                              <div className="flex-1">
-                                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
-                                  {job.title}
-                                </CardTitle>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium mb-2">{job.company.name}</p>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center">
-                                  <MapPin className="w-4 h-4 mr-1" />
-                                  {job.location}
-                                </p>
-                              </div>
-                            </div>
-                            {/* Right side - Company Image (Larger) */}
-                            <div className="w-20 h-20 md:w-28 md:h-28 bg-white dark:bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
-                              {job.company.logo || getCompanyLogo(job.company) ? (
-                                <img 
-                                  src={job.company.logo || getCompanyLogo(job.company)!} 
-                                  alt={job.company.name}
-                                  className="w-18 h-18 md:w-24 md:h-24 object-contain rounded-lg"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    const parent = target.parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = `<div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-3xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center">
-                                  <span className="text-3xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
-                                </div>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        </CardHeader>
-
-                        {/* Salary & Experience Section */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-                            <div className="text-green-600 font-semibold text-lg">
+                          
+                          {/* Job Info - Mobile Optimized */}
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 leading-tight">
+                              {job.title}
+                            </CardTitle>
+                            <p className="text-blue-600 dark:text-blue-400 font-medium mb-1 text-sm sm:text-base">{job.company.name}</p>
+                            <div className="flex items-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1">
+                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                              <span className="truncate">{job.location}</span>
+                            </div>
+                            <div className="text-green-600 font-semibold text-sm sm:text-base md:text-lg">
                               {job.salary}
                             </div>
-                            <div className="flex items-center text-gray-600">
-                              <Users className="w-4 h-4 mr-1" />
-                              <span className="text-sm">{job.experienceMin}-{job.experienceMax} years</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              <span className="text-sm">
-                                Closes: {new Date(job.closingDate).toLocaleDateString('en-GB')}
-                              </span>
-                            </div>
                           </div>
-                          {/* Removed duplicate experience badge here */}
                         </div>
 
-                        {/* Skills Section */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {job.skills.split(',').slice(0, 6).map((skill, index) => (
-                            <Badge key={index} variant="outline" className="badge text-xs px-2 py-1">
+                        {/* Experience & Closing Date - Mobile Optimized */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 text-xs sm:text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                            <span>{job.experienceMin}-{job.experienceMax} years</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                            <span>Closes: {new Date(job.closingDate).toLocaleDateString('en-GB')}</span>
+                          </div>
+                        </div>
+
+                        {/* Skills Section - Mobile Responsive */}
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+                          {job.skills.split(',').slice(0, 4).map((skill, index) => (
+                            <Badge key={index} variant="outline" className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
                               {skill.trim()}
                             </Badge>
                           ))}
-                          {job.skills.split(',').length > 6 && (
-                            <Badge variant="outline" className="badge text-xs px-2 py-1">
-                              +{job.skills.split(',').length - 6} more
+                          {job.skills.split(',').length > 4 && (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                              +{job.skills.split(',').length - 4} more
                             </Badge>
                           )}
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-gray-100 space-y-3 sm:space-y-0">
-                          <div className="flex items-center space-x-1">
-                            {/* Share Buttons */}
-                            <button
-                              onClick={(e) => handleShare(e, job, 'whatsapp')}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
-                              title="Share on WhatsApp"
-                              data-testid={`share-whatsapp-${job.id}`}
-                            >
-                              <FaWhatsapp className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => handleShare(e, job, 'telegram')}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                              title="Share on Telegram"
-                              data-testid={`share-telegram-${job.id}`}
-                            >
-                              <FaTelegram className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => handleShare(e, job, 'copy')}
-                              className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
-                              title="Copy Link"
-                              data-testid={`share-copy-${job.id}`}
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center space-x-3">
-                            {/* Experience Level and View Details */}
-                            <Badge className={getLevelColor(job.experienceLevel)}>
+                        {/* Mobile-Optimized Action Section */}
+                        <div className="flex flex-col space-y-3 pt-3 border-t border-gray-100">
+                          {/* Top Row: Experience Level + Application Status/Button */}
+                          <div className="flex items-center justify-between">
+                            <Badge className={getLevelColor(job.experienceLevel)} variant="outline">
                               {job.experienceLevel}
                             </Badge>
+                            
+                            {isApplied ? (
+                              <div className="flex items-center space-x-1.5">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-xs sm:text-sm text-green-600 font-medium">Applied</span>
+                              </div>
+                            ) : !isExpired ? (
+                              <Button
+                                size="sm"
+                                onClick={(e) => handleApplyJob(e, job)}
+                                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm h-8 px-3"
+                                data-testid={`apply-now-${job.id}`}
+                              >
+                                Apply Now
+                              </Button>
+                            ) : (
+                              <span className="text-xs sm:text-sm text-gray-500">Expired</span>
+                            )}
+                          </div>
+                          
+                          {/* Bottom Row: Share Buttons + View Details */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={(e) => handleShare(e, job, 'whatsapp')}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                                title="Share on WhatsApp"
+                                data-testid={`share-whatsapp-${job.id}`}
+                              >
+                                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'telegram')}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                title="Share on Telegram"
+                                data-testid={`share-telegram-${job.id}`}
+                              >
+                                <FaTelegram className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'copy')}
+                                className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                                title="Copy Link"
+                                data-testid={`share-copy-${job.id}`}
+                              >
+                                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+                            
                             <Button
                               variant="outline"
                               size="sm"
@@ -594,29 +587,12 @@ export default function Jobs() {
                                 e.stopPropagation();
                                 handleJobClick(job.id);
                               }}
-                              className="flex items-center space-x-2"
+                              className="text-xs sm:text-sm h-8 px-3"
                               data-testid={`view-details-${job.id}`}
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
                               <span>View Details</span>
                             </Button>
-                            {isApplied ? (
-                              <div className="flex items-center space-x-2">
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                <span className="text-sm text-green-600 font-medium">Applied</span>
-                              </div>
-                            ) : !isExpired ? (
-                              <Button
-                                size="sm"
-                                onClick={(e) => handleApplyJob(e, job)}
-                                className="bg-blue-600 hover:bg-blue-700"
-                                data-testid={`apply-now-${job.id}`}
-                              >
-                                Apply Now
-                              </Button>
-                            ) : (
-                              <span className="text-sm text-gray-500">Expired</span>
-                            )}
                           </div>
                         </div>
                       </CardContent>
