@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Navbar } from '@/components/job-portal/navbar';
 import { Footer } from '@/components/job-portal/footer';
-import { Plus, Building, Globe, Linkedin, MapPin, Trash2, Edit } from 'lucide-react';
+import { Plus, Building, Globe, Linkedin, MapPin, Trash2, Edit, Eye } from 'lucide-react';
 import type { InsertCompany, Company } from '@shared/schema';
 
 function AddCompanyDialog({ children }: { children: React.ReactNode }) {
@@ -546,103 +546,186 @@ export default function Companies() {
           </AddCompanyDialog>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           {companies.map((company) => (
-            <Card key={company.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
+            <Card key={company.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white dark:bg-white border rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm company-logo-container">
+                  {/* Left Side: Company Details */}
+                  <div className="flex-1 space-y-4">
+                    {/* Company Header */}
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-white border-2 rounded-lg flex items-center justify-center shadow-sm">
+                        {company.logo || getCompanyLogo(company) ? (
+                          <img 
+                            src={company.logo || getCompanyLogo(company)!} 
+                            alt={company.name}
+                            className="w-8 h-8 object-contain rounded"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-sm font-bold text-blue-600">${company.name.charAt(0).toUpperCase()}</span></div>`;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <span className="text-sm font-bold text-blue-600">{company.name.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+                          {company.name}
+                        </h3>
+                        <p className="text-blue-600 dark:text-blue-400 font-medium">
+                          {company.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    {company.location && (
+                      <div className="flex items-center text-gray-600 dark:text-gray-400">
+                        <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span>{company.location}</span>
+                      </div>
+                    )}
+
+                    {/* Salary/Package Info */}
+                    <div className="text-green-600 font-bold text-lg md:text-xl">
+                      ₹2.5-8.5 LPA
+                    </div>
+
+                    {/* Experience and Closing Date */}
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center">
+                        <span>👥 0-5 years</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span>📅 Closes: 22/09/2025</span>
+                      </div>
+                    </div>
+
+                    {/* Skills/Technologies */}
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Java</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">React</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Node.js</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Python</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">SQL</span>
+                    </div>
+
+                    {/* Social Share Buttons */}
+                    <div className="flex items-center space-x-3 pt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-green-600 hover:bg-green-50 p-2"
+                        title="Share on WhatsApp"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                        </svg>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-500 hover:bg-blue-50 p-2"
+                        title="Share on Telegram"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:bg-blue-50 p-2"
+                        title="Share on LinkedIn"
+                      >
+                        <Linkedin className="w-5 h-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-600 hover:bg-gray-50 p-2"
+                        title="Copy Link"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Large Company Logo */}
+                  <div className="flex flex-col items-center ml-6">
+                    <div className="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white border-2 rounded-xl flex items-center justify-center shadow-lg">
                       {company.logo || getCompanyLogo(company) ? (
                         <img 
                           src={company.logo || getCompanyLogo(company)!} 
                           alt={company.name}
-                          className="w-10 h-10 md:w-14 md:h-14 object-contain rounded"
+                          className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain rounded-lg"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-lg font-bold text-blue-600">${company.name.charAt(0).toUpperCase()}</span></div>`;
+                              parent.innerHTML = `<div class="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-600">${company.name.charAt(0).toUpperCase()}</span></div>`;
                             }
                           }}
                         />
                       ) : (
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="text-lg font-bold text-blue-600">{company.name.charAt(0).toUpperCase()}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base md:text-lg">{company.name}</CardTitle>
-                      {company.location && (
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {company.location}
+                        <div className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-blue-100 rounded-xl flex items-center justify-center">
+                          <span className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-600">{company.name.charAt(0).toUpperCase()}</span>
                         </div>
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* Bottom Action Buttons */}
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    {company.website && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="text-xs h-8 px-3"
+                        data-testid={`company-website-${company.id}`}
+                      >
+                        <a href={company.website} target="_blank" rel="noopener noreferrer">
+                          <Globe className="w-3 h-3 mr-1" />
+                          Website
+                        </a>
+                      </Button>
+                    )}
+
+                    <EditCompanyDialog company={company}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8 px-3"
+                        data-testid={`company-edit-${company.id}`}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                    </EditCompanyDialog>
+                  </div>
+
                   <Button
-                    variant="ghost"
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteCompany(company.id, company.name)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-xs h-8 px-3"
                     title="Delete Company"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Delete
                   </Button>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-0">
-                {company.description && (
-                  <CardDescription className="text-sm mb-4 line-clamp-3">
-                    {company.description}
-                  </CardDescription>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  {company.website && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="text-xs"
-                      data-testid={`company-website-${company.id}`}
-                    >
-                      <a href={company.website} target="_blank" rel="noopener noreferrer">
-                        <Globe className="w-3 h-3 mr-1" />
-                        Website
-                      </a>
-                    </Button>
-                  )}
-
-                  {company.linkedinUrl && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="text-xs"
-                      data-testid={`company-linkedin-${company.id}`}
-                    >
-                      <a href={company.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                        <Linkedin className="w-3 h-3 mr-1" />
-                        LinkedIn
-                      </a>
-                    </Button>
-                  )}
-
-                  <EditCompanyDialog company={company}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      data-testid={`company-edit-${company.id}`}
-                    >
-                      <Edit className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                  </EditCompanyDialog>
                 </div>
               </CardContent>
             </Card>
