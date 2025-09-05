@@ -145,96 +145,70 @@ export default function MyApplications() {
                   className="w-full hover:shadow-md transition-shadow"
                   data-testid={`application-card-${application.id}`}
                 >
-                  <CardHeader className="pb-3">
-                    {/* Title and Status Row */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 leading-tight flex-1">
-                        {job.title}
-                      </CardTitle>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Badge className="bg-green-500 text-white text-xs px-2 py-1">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Applied
-                        </Badge>
-                        {isExpired && (
-                          <Badge variant="destructive" className="text-xs px-2 py-1">Expired</Badge>
-                        )}
+                  <CardContent className="p-6">
+                    {/* Header with Title and Applied Badge */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {job.title}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                          <div className="flex items-center gap-1">
+                            <Building className="w-4 h-4" />
+                            <span>{job.company.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{job.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>Applied: {appliedDate.toLocaleDateString('en-GB')}</span>
+                          </div>
+                        </div>
                       </div>
+                      <Badge className="bg-green-500 text-white px-3 py-1">
+                        Applied
+                      </Badge>
                     </div>
-                    
-                    {/* Company Info Row */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Building className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span className="font-medium text-gray-900 truncate">{job.company.name}</span>
-                      </div>
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 ml-3">
-                        <img 
-                          src={job.company.logo || '/api/placeholder/40/40'} 
-                          alt={job.company.name}
-                          className="w-8 h-8 object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling!.textContent = job.company.name.charAt(0).toUpperCase();
-                          }}
-                        />
-                        <span className="hidden text-sm font-semibold text-gray-600"></span>
-                      </div>
-                    </div>
-                    
-                    {/* Location and Applied Date */}
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{job.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3 h-3 flex-shrink-0" />
-                        <span>Applied: {appliedDate.toLocaleDateString('en-GB')}</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0 space-y-3">
+
                     {/* Salary and Closing Date */}
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1">
-                        <span className="font-semibold text-green-600">{job.salary}</span>
-                      </div>
+                    <div className="flex items-center gap-6 mb-4 text-sm">
+                      <span className="font-semibold text-green-600">{job.salary}</span>
                       <div className="flex items-center gap-1 text-gray-600">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-4 h-4" />
                         <span>Closes: {new Date(job.closingDate).toLocaleDateString('en-GB')}</span>
                       </div>
+                      {isExpired && (
+                        <Badge variant="destructive" className="text-xs px-2 py-1">Expired</Badge>
+                      )}
                     </div>
-                    
-                    {/* Description */}
-                    <CardDescription className="text-sm leading-relaxed">
-                      {job.description.length > 120 
-                        ? `${job.description.substring(0, 120)}...` 
+
+                    {/* Job Description */}
+                    <p className="text-gray-700 text-sm mb-4 leading-relaxed">
+                      {job.description.length > 150 
+                        ? `${job.description.substring(0, 150)}...` 
                         : job.description
                       }
-                    </CardDescription>
+                    </p>
                     
                     {/* Skills */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {job.skills.split(',').slice(0, 5).map((skill: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {job.skills.split(',').slice(0, 6).map((skill: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200">
                           {skill.trim()}
                         </Badge>
                       ))}
-                      {job.skills.split(',').length > 5 && (
-                        <Badge variant="outline" className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600 border-gray-200">
-                          +{job.skills.split(',').length - 5}
+                      {job.skills.split(',').length > 6 && (
+                        <Badge variant="outline" className="text-xs px-2 py-1 bg-gray-50 text-gray-600 border-gray-200">
+                          +{job.skills.split(',').length - 6}
                         </Badge>
                       )}
                     </div>
                     
-                    <Separator className="my-3" />
-                    
-                    {/* Status and Actions */}
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-600 text-center sm:text-left">
+                    {/* Bottom Section - Status and Actions */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="text-sm text-gray-600">
                         Application Status: <span className="text-green-600 font-medium">Submitted</span>
                       </div>
                       
@@ -244,7 +218,7 @@ export default function MyApplications() {
                           size="sm"
                           onClick={() => handleViewJob(job.id)}
                           data-testid={`view-job-${application.id}`}
-                          className="flex-1 text-xs h-8"
+                          className="text-xs h-8"
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
                           View Job
@@ -255,7 +229,7 @@ export default function MyApplications() {
                           onClick={() => handleRemoveApplication(application.id)}
                           disabled={removeApplicationMutation.isPending}
                           data-testid={`remove-application-${application.id}`}
-                          className="flex-1 text-xs h-8"
+                          className="text-xs h-8"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Remove
