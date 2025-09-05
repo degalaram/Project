@@ -211,6 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/jobs/:id', async (req, res) => {
     try {
       const jobId = req.params.id;
+      const { userId } = req.body; // Get userId from request body
 
       // Check if job exists
       const job = await storage.getJob(jobId);
@@ -218,8 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Job not found' });
       }
 
-      // Create deleted post entry for the job
-      const deletedPost = await storage.softDeleteJob(jobId);
+      // Create deleted post entry for the job with user context
+      const deletedPost = await storage.softDeleteJob(jobId, userId);
 
       res.json({ message: 'Job deleted successfully', deletedPost });
     } catch (error) {
