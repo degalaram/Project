@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -81,7 +82,7 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Company</DialogTitle>
           <DialogDescription>
@@ -146,12 +147,13 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               data-testid="cancel-company-button"
+              className="w-full sm:w-auto order-2 sm:order-1"
             >
               Cancel
             </Button>
@@ -159,6 +161,7 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
               type="submit"
               disabled={createCompanyMutation.isPending}
               data-testid="create-company-button"
+              className="w-full sm:w-auto order-1 sm:order-2"
             >
               {createCompanyMutation.isPending ? 'Adding...' : 'Add Company'}
             </Button>
@@ -246,7 +249,7 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Company</DialogTitle>
           <DialogDescription>
@@ -311,12 +314,13 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               data-testid="cancel-edit-company-button"
+              className="w-full sm:w-auto order-2 sm:order-1"
             >
               Cancel
             </Button>
@@ -324,6 +328,7 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
               type="submit"
               disabled={updateCompanyMutation.isPending}
               data-testid="update-company-button"
+              className="w-full sm:w-auto order-1 sm:order-2"
             >
               {updateCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
             </Button>
@@ -408,11 +413,11 @@ export default function Companies() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Companies</h1>
-              <p className="text-gray-600">
+            <div className="w-full sm:w-auto">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Companies</h1>
+              <p className="text-sm sm:text-base text-gray-600">
                 Manage companies for job postings and recruitment.
               </p>
             </div>
@@ -423,104 +428,22 @@ export default function Companies() {
               </Button>
             </AddCompanyDialog>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <CardContent className="p-4 md:p-6">
-                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <div className="h-4 sm:h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded mb-4"></div>
                   <div className="space-y-2">
-                    <div className="h-3 bg-gray-200 rounded"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-2 sm:h-3 bg-gray-200 rounded"></div>
+                    <div className="h-2 sm:h-3 bg-gray-200 rounded w-2/3"></div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
-        {/* Footer */}
-        <footer className="bg-gray-900 dark:bg-gray-950 text-white py-12 mt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Company Info */}
-              <div>
-                <h3 className="text-xl font-bold mb-4">JobPortal</h3>
-                <p className="text-gray-300 mb-4">
-                  Your gateway to amazing career opportunities. Connect with top companies and find your dream job.
-                </p>
-              </div>
-
-              {/* Quick Links */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-                <ul className="space-y-2">
-                  <li><a href="/jobs" className="text-gray-300 hover:text-white transition-colors">Browse Jobs</a></li>
-                  <li><a href="/companies" className="text-gray-300 hover:text-white transition-colors">Companies</a></li>
-                  <li><a href="/courses" className="text-gray-300 hover:text-white transition-colors">Courses</a></li>
-                  <li><a href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact Us</a></li>
-                </ul>
-              </div>
-
-              {/* Social Media & Contact */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
-                <div className="flex space-x-4 mb-4">
-                  <a 
-                    href="https://www.linkedin.com/in/ramdegala/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
-                    title="LinkedIn"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z"/>
-                    </svg>
-                  </a>
-                  <a 
-                    href="mailto:ramdegala9@gmail.com"
-                    className="p-2 bg-red-600 hover:bg-red-700 rounded-full transition-colors"
-                    title="Gmail"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                    </svg>
-                  </a>
-                  <a 
-                    href="https://youtube.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 bg-red-600 hover:bg-red-700 rounded-full transition-colors"
-                    title="YouTube"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                    </svg>
-                  </a>
-                  <a 
-                    href="https://twitter.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors"
-                    title="Twitter"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
-                    </svg>
-                  </a>
-                </div>
-                <p className="text-gray-300 text-sm">
-                  Email: ramdegala9@gmail.com
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-700 pt-8 mt-8 text-center">
-              <p className="text-gray-400">&copy; 2025 Ram Job Portal. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     );
   }
@@ -531,9 +454,9 @@ export default function Companies() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Companies</h1>
-            <p className="text-gray-600">
+          <div className="w-full sm:w-auto">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Companies</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Manage companies for job postings and recruitment.
             </p>
           </div>
@@ -541,68 +464,54 @@ export default function Companies() {
           <AddCompanyDialog>
             <Button className="w-full sm:w-auto" data-testid="add-company-button">
               <Plus className="w-4 h-4 mr-2" />
-              <span className="text-blue-500">Add Jobs</span>
+              Add Company
             </Button>
           </AddCompanyDialog>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {companies.map((company) => (
             <Card key={company.id} className="hover:shadow-lg transition-shadow relative group">
-              <CardContent className="p-4 md:p-6">
-                {/* Delete Icon - Top Right */}
-                <div className="absolute top-3 right-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDeleteCompany(company.id, company.name)}
-                    disabled={deleteMutation.isPending}
-                    data-testid={`delete-company-${company.id}`}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-
-                {/* Main Content Layout - Logo on Left, Content on Right */}
-                <div className="flex items-start space-x-3 sm:space-x-4">
-                  {/* Company Logo/Initial - Left Side */}
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                {/* Company Logo and Basic Info */}
+                <div className="flex items-start space-x-2 sm:space-x-3 md:space-x-4 mb-3 sm:mb-4">
+                  {/* Company Logo */}
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white border-2 rounded-lg flex items-center justify-center shadow-sm">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-white border-2 rounded-lg flex items-center justify-center shadow-sm">
                       {company.logo || getCompanyLogo(company) ? (
                         <img 
                           src={company.logo || getCompanyLogo(company)!} 
                           alt={company.name}
-                          className="w-8 h-8 sm:w-12 sm:h-12 object-contain rounded"
+                          className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 object-contain rounded"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-sm sm:text-lg font-bold text-blue-600">${company.name.charAt(0).toUpperCase()}</span></div>`;
+                              parent.innerHTML = `<div class="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-xs sm:text-sm md:text-lg font-bold text-blue-600">${company.name.charAt(0).toUpperCase()}</span></div>`;
                             }
                           }}
                         />
                       ) : (
-                        <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="text-sm sm:text-lg font-bold text-blue-600">{company.name.charAt(0).toUpperCase()}</span>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <span className="text-xs sm:text-sm md:text-lg font-bold text-blue-600">{company.name.charAt(0).toUpperCase()}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Company Info - Right Side */}
+                  {/* Company Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 truncate">
                       {company.name}
                     </h3>
-                    <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-2">
-                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <div className="flex items-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                       <span className="truncate">{company.location || 'Location not specified'}</span>
                     </div>
-                    <div className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm leading-relaxed">
+                    <div className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm leading-relaxed line-clamp-2">
                       {company.description ? 
-                        (company.description.length > 100 
-                          ? `${company.description.substring(0, 100)}...` 
+                        (company.description.length > 80 
+                          ? `${company.description.substring(0, 80)}...` 
                           : company.description) 
                         : 'A leading global professional services company'
                       }
@@ -610,44 +519,95 @@ export default function Companies() {
                   </div>
                 </div>
 
-                {/* Links - Bottom */}
-                <div className="flex items-center justify-center space-x-2 sm:space-x-3 mt-4 pt-4 border-t border-gray-100">
-                  {company.website && (
+                {/* 4 Centered Icons */}
+                <div className="flex items-center justify-center pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-center space-x-1 sm:space-x-2 md:space-x-3">
+                    {/* Website Icon */}
+                    {company.website ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-blue-50 hover:border-blue-300"
+                        asChild
+                        data-testid={`company-website-${company.id}`}
+                      >
+                        <a 
+                          href={company.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          title="Website"
+                        >
+                          <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 opacity-50 cursor-not-allowed"
+                        disabled
+                        title="Website not available"
+                      >
+                        <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    )}
+
+                    {/* LinkedIn Icon */}
+                    {company.linkedinUrl ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-blue-50 hover:border-blue-300"
+                        asChild
+                        data-testid={`company-linkedin-${company.id}`}
+                      >
+                        <a 
+                          href={company.linkedinUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          title="LinkedIn"
+                        >
+                          <Linkedin className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 opacity-50 cursor-not-allowed"
+                        disabled
+                        title="LinkedIn not available"
+                      >
+                        <Linkedin className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    )}
+
+                    {/* Edit Icon */}
+                    <EditCompanyDialog company={company}>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                        data-testid={`edit-company-${company.id}`}
+                        title="Edit Company"
+                      >
+                        <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </EditCompanyDialog>
+
+                    {/* Delete Icon */}
                     <Button 
                       variant="outline" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      asChild
-                      data-testid={`company-website-${company.id}`}
+                      size="sm"
+                      className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                      onClick={() => handleDeleteCompany(company.id, company.name)}
+                      disabled={deleteMutation.isPending}
+                      data-testid={`delete-company-${company.id}`}
+                      title="Delete Company"
                     >
-                      <a 
-                        href={company.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        title="Website"
-                      >
-                        <Globe className="w-4 h-4" />
-                      </a>
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
-                  )}
-                  {company.linkedinUrl && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      asChild
-                      data-testid={`company-linkedin-${company.id}`}
-                    >
-                      <a 
-                        href={company.linkedinUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        title="LinkedIn"
-                      >
-                        <Linkedin className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -655,14 +615,14 @@ export default function Companies() {
         </div>
 
         {!isLoading && companies.length === 0 && (
-          <div className="text-center py-12">
-            <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No companies yet</h3>
-            <p className="text-gray-500 mb-4">
+          <div className="text-center py-8 sm:py-12">
+            <Building className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">No companies yet</h3>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
               Start by adding your first company to the database.
             </p>
             <AddCompanyDialog>
-              <Button data-testid="add-first-company-button">
+              <Button data-testid="add-first-company-button" className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Company
               </Button>
