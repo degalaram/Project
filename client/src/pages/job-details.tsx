@@ -73,8 +73,8 @@ export default function JobDetails() {
       setHasApplied(true);
       queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
       toast({
-        title: 'Application submitted',
-        description: 'Your application has been sent to the company.',
+        title: 'Applied Successfully!',
+        description: 'Your application has been submitted successfully. You can track it in My Applications.',
       });
     },
     onError: (error) => {
@@ -285,25 +285,23 @@ export default function JobDetails() {
                     <p className="text-sm text-gray-600">The application deadline has passed.</p>
                   </div>
                 ) : (
-                  <>
-                    <Button 
-                      className="w-full" 
-                      size="lg"
-                      onClick={() => {
-                        // Open job application URL in new tab first
-                        if (job.applyUrl) {
-                          window.open(job.applyUrl, '_blank');
-                        }
-                        // Track internal application
-                        applyMutation.mutate();
-                      }}
-                      disabled={applyMutation.isPending}
-                      data-testid="apply-now-button"
-                    >
-                      {applyMutation.isPending ? 'Applying...' : 'Apply Now'}
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </Button>
-                  </>
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => {
+                      // Open job application URL in new tab first
+                      if (job.applyUrl) {
+                        window.open(job.applyUrl, '_blank');
+                      }
+                      // Then track internal application
+                      applyMutation.mutate();
+                    }}
+                    disabled={applyMutation.isPending}
+                    data-testid="apply-now-button"
+                  >
+                    {applyMutation.isPending ? 'Applying...' : 'Apply Now'}
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
                 )}
               </CardContent>
             </Card>
