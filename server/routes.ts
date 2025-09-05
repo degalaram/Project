@@ -345,37 +345,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/companies/:id", async (req, res) => {
     try {
       const companyId = req.params.id;
+      console.log(`Updating company with ID: ${companyId}`, req.body);
+      
       const validatedData = insertCompanySchema.parse(req.body);
       const updatedCompany = await storage.updateCompany(companyId, validatedData);
       
       if (!updatedCompany) {
+        console.log(`Company not found for update: ${companyId}`);
         return res.status(404).json({ message: "Company not found" });
       }
       
+      console.log(`Company updated successfully: ${companyId}`);
       res.json(updatedCompany);
     } catch (error) {
       console.error("Error updating company:", error);
-      res.status(500).json({ message: "Failed to update company" });
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Failed to update company" });
+      }
     }
   });
 
-  // Add company deletion endpoint
+  // Company deletion endpoint
   app.delete('/api/companies/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      // Assuming 'storage' has a method to delete a company by ID
-      // and also to remove associated jobs.
-      // If not, these operations would need to be implemented in storage.ts
+      console.log(`Deleting company with ID: ${id}`);
+      
       const deleted = await storage.deleteCompany(id);
 
       if (!deleted) {
-        return res.status(404).json({ error: 'Company not found' });
+        console.log(`Company not found: ${id}`);
+        return res.status(404).json({ message: 'Company not found' });
       }
 
-      // Assuming storage.deleteCompany also handles removing associated jobs
-      // If not, you would add:
-      // await storage.deleteJobsByCompanyId(id);
-
+      console.log(`Company deleted successfully: ${id}`);
       res.json({ message: 'Company deleted successfully' });
     } catch (error) {
       console.error(`Error deleting company with ID ${req.params.id}:`, error);
@@ -399,6 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/jobs/analyze-url", async (req, res) => {
     try {
       const { url } = req.body;
+      console.log(`Analyzing job URL: ${url}`);
 
       if (!url) {
         return res.status(400).json({ message: "URL is required" });
@@ -406,6 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get available companies to map to real company IDs
       const companies = await storage.getCompanies();
+      console.log(`Found ${companies.length} companies for analysis`);
       
       // Enhanced job analysis with better data extraction simulation
       let mockAnalysis = {
@@ -458,6 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mockAnalysis.salary = "₹4-5 LPA";
       }
 
+      console.log(`Job analysis completed for: ${mockAnalysis.title}`);
       // Return the analyzed job data
       res.json(mockAnalysis);
     } catch (error) {
