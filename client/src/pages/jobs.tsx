@@ -233,7 +233,20 @@ export default function Jobs() {
 
   const deleteJobMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await apiRequest('DELETE', `/api/jobs/${jobId}`);
+      // First create an application for this job so it can be tracked in deleted posts
+      try {
+        await apiRequest('POST', '/api/applications', {
+          userId: user.id,
+          jobId: jobId,
+        });
+      } catch (error) {
+        // Application might already exist, continue with deletion
+      }
+      
+      // Then soft delete the job with user context
+      const response = await apiRequest('DELETE', `/api/jobs/${jobId}`, {
+        userId: user.id
+      });
       return response.json();
     },
     onSuccess: () => {
