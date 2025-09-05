@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Navbar } from '@/components/job-portal/navbar';
 import { Footer } from '@/components/job-portal/footer';
-import { Plus, Building, Globe, Linkedin, MapPin, Trash2 } from 'lucide-react';
+import { Plus, Building, Globe, Linkedin, MapPin, Trash2, Edit } from 'lucide-react';
 import type { InsertCompany, Company } from '@shared/schema';
 
 function AddCompanyDialog({ children }: { children: React.ReactNode }) {
@@ -161,6 +161,154 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
               data-testid="create-company-button"
             >
               {createCompanyMutation.isPending ? 'Adding...' : 'Add Company'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditCompanyDialog({ company, children }: { company: Company; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<InsertCompany>({
+    name: company.name,
+    description: company.description || '',
+    website: company.website || '',
+    linkedinUrl: company.linkedinUrl || '',
+    logo: company.logo || '',
+    location: company.location || '',
+  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateCompanyMutation = useMutation({
+    mutationFn: async (data: InsertCompany) => {
+      const response = await apiRequest('PUT', `/api/companies/${company.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Company updated successfully',
+        description: 'The company details have been updated.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to update company',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast({
+        title: 'Please enter company name',
+        description: 'Company name is required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    updateCompanyMutation.mutate(formData);
+  };
+
+  const handleChange = (field: keyof InsertCompany, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Company</DialogTitle>
+          <DialogDescription>
+            Update the company details in the database.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-company-name">Company Name *</Label>
+            <Input
+              id="edit-company-name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="Enter company name"
+              required
+              data-testid="edit-company-name-input"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-company-description">Description</Label>
+            <Textarea
+              id="edit-company-description"
+              value={formData.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Company description"
+              className="min-h-20"
+              data-testid="edit-company-description-textarea"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-company-website">Website</Label>
+            <Input
+              id="edit-company-website"
+              value={formData.website || ''}
+              onChange={(e) => handleChange('website', e.target.value)}
+              placeholder="https://company.com"
+              data-testid="edit-company-website-input"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-company-linkedin">LinkedIn URL</Label>
+            <Input
+              id="edit-company-linkedin"
+              value={formData.linkedinUrl || ''}
+              onChange={(e) => handleChange('linkedinUrl', e.target.value)}
+              placeholder="https://linkedin.com/company/..."
+              data-testid="edit-company-linkedin-input"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-company-location">Location</Label>
+            <Input
+              id="edit-company-location"
+              value={formData.location || ''}
+              onChange={(e) => handleChange('location', e.target.value)}
+              placeholder="City, Country"
+              data-testid="edit-company-location-input"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              data-testid="cancel-edit-company-button"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateCompanyMutation.isPending}
+              data-testid="update-company-button"
+            >
+              {updateCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
             </Button>
           </div>
         </form>
@@ -461,6 +609,18 @@ export default function Companies() {
                       </a>
                     </Button>
                   )}
+
+                  <EditCompanyDialog company={company}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      data-testid={`company-edit-${company.id}`}
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                  </EditCompanyDialog>
                 </div>
               </CardContent>
             </Card>
