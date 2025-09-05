@@ -100,7 +100,7 @@ export default function MyApplications() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -145,14 +145,14 @@ export default function MyApplications() {
                   className="w-full hover:shadow-md transition-shadow"
                   data-testid={`application-card-${application.id}`}
                 >
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-5 md:p-6">
                     {/* Header with Title and Applied Badge */}
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-2 sm:gap-0">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                           {job.title}
                         </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3">
                           <div className="flex items-center gap-1">
                             <Building className="w-4 h-4" />
                             <span>{job.company.name}</span>
@@ -167,13 +167,13 @@ export default function MyApplications() {
                           </div>
                         </div>
                       </div>
-                      <Badge className="bg-green-500 text-white px-3 py-1">
+                      <Badge className="bg-green-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm self-start sm:self-auto">
                         Applied
                       </Badge>
                     </div>
 
                     {/* Salary and Closing Date */}
-                    <div className="flex items-center gap-6 mb-4 text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mb-4 text-xs sm:text-sm">
                       <span className="font-semibold text-green-600">{job.salary}</span>
                       <div className="flex items-center gap-1 text-gray-600">
                         <Clock className="w-4 h-4" />
@@ -185,7 +185,7 @@ export default function MyApplications() {
                     </div>
 
                     {/* Job Description */}
-                    <p className="text-gray-700 text-sm mb-4 leading-relaxed">
+                    <p className="text-gray-700 text-xs sm:text-sm mb-4 leading-relaxed">
                       {job.description.length > 150 
                         ? `${job.description.substring(0, 150)}...` 
                         : job.description
@@ -193,7 +193,7 @@ export default function MyApplications() {
                     </p>
                     
                     {/* Skills */}
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                       {job.skills.split(',').slice(0, 6).map((skill: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200">
                           {skill.trim()}
@@ -207,12 +207,12 @@ export default function MyApplications() {
                     </div>
                     
                     {/* Bottom Section - Status and Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 gap-3 sm:gap-0">
+                      <div className="text-xs sm:text-sm text-gray-600">
                         Application Status: <span className="text-green-600 font-medium">Submitted</span>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
