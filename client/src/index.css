@@ -476,7 +476,7 @@
   }
 
   .grid-responsive {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.75rem;
   }
 
@@ -580,6 +580,46 @@
   transform: translateY(-1px) scale(1.02);
 }
 
+/* Mobile-specific social media icon sizing */
+@media (max-width: 768px) {
+  .social-icon {
+    padding: 0.75rem !important;
+    min-width: 3rem !important;
+    min-height: 3rem !important;
+  }
+
+  .social-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  /* Job page social sharing icons - make them larger on mobile */
+  .job-card .social-icon,
+  [data-testid*="share-"] {
+    padding: 0.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+  }
+
+  .job-card .social-icon svg,
+  [data-testid*="share-"] svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Footer social icons - larger for mobile */
+  footer .social-icon {
+    padding: 1rem !important;
+    min-width: 3.5rem !important;
+    min-height: 3.5rem !important;
+  }
+
+  footer .social-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+}
+
 /* Footer specific styles */
 footer {
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
@@ -598,7 +638,14 @@ footer {
   }
 
   footer .social-icon {
-    padding: 0.5rem;
+    padding: 1rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+  }
+
+  footer .social-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   footer h3 {
@@ -733,6 +780,157 @@ footer {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
+  /* Job card mobile optimizations - 2 Row Layout */
+  [data-testid*="job-card-"] .flex.items-start.justify-between {
+    align-items: flex-start !important;
+  }
+
+  /* Bottom section reorganization for mobile - 2 rows */
+  [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.justify-between {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  /* First Row: Social Media Icons - 4 icons centered */
+  [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 {
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0.5rem 0 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    background-color: #f9fafb !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Social media icon styling for mobile - make them more prominent */
+  [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 button {
+    padding: 0.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #d1d5db !important;
+    background-color: white !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Second Row: Action Components - 4 components centered */
+  [data-testid*="job-card-"] .pt-3.border-t .flex.flex-wrap.items-center.justify-end {
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    background-color: #f9fafb !important;
+    flex: none !important;
+  }
+
+  /* Company logo containers - normalize sizes */
+  [data-testid*="job-card-"] .w-12.h-12,
+  [data-testid*="job-card-"] .w-16.h-16 {
+    width: 3rem !important;
+    height: 3rem !important;
+    flex-shrink: 0;
+  }
+
+  [data-testid*="job-card-"] .w-16.h-16.sm\\:w-20.sm\\:h-20.md\\:w-24.md\\:h-24,
+  [data-testid*="job-card-"] .w-20.h-20,
+  [data-testid*="job-card-"] .w-24.h-24 {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    flex-shrink: 0;
+  }
+
+  /* Company logo images - normalize sizes */
+  [data-testid*="job-card-"] .w-8.h-8,
+  [data-testid*="job-card-"] .w-12.h-12 {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  [data-testid*="job-card-"] .w-12.h-12.sm\\:w-16.sm\\:h-16.md\\:w-20.md\\:h-20,
+  [data-testid*="job-card-"] .w-16.h-16,
+  [data-testid*="job-card-"] .w-20.h-20 {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+
+  /* Location text - allow wrapping for multiple cities */
+  [data-testid*="job-card-"] .flex.items-center.text-gray-600 {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    line-height: 1.3 !important;
+  }
+
+  [data-testid*="job-card-"] .flex.items-center.text-gray-600 span {
+    word-break: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Action buttons - consistent sizing for mobile */
+  [data-testid*="apply-now-"] {
+    height: 2rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    min-width: 4rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* View Details button - consistent sizing */
+  [data-testid*="view-details-"] {
+    height: 2rem !important;
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-width: 3.5rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Delete button - consistent sizing */
+  [data-testid*="delete-job-"] {
+    height: 2rem !important;
+    padding: 0.5rem !important;
+    min-width: 2rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Experience badge - consistent sizing */
+  [data-testid*="job-card-"] .pt-3.border-t .flex.flex-wrap .bg-green-500,
+  [data-testid*="job-card-"] .pt-3.border-t .flex.flex-wrap .bg-blue-500 {
+    height: 2rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    min-width: 3.5rem !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Job info section - better spacing */
+  [data-testid*="job-card-"] .flex-1.min-w-0 {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Company name and job title - better wrapping */
+  [data-testid*="job-card-"] .line-clamp-2 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
   /* Make tables scrollable */
   .table-responsive {
     overflow-x: auto;
@@ -848,6 +1046,40 @@ footer {
     font-size: 0.875rem !important;
     padding: 0.5rem 1rem !important;
   }
+
+  /* Job cards extra small mobile optimizations */
+  [data-testid*="job-card-"] {
+    margin: 0 0.25rem 0.75rem 0.25rem !important;
+  }
+
+  [data-testid*="job-card-"] .p-3 {
+    padding: 0.75rem !important;
+  }
+
+  /* Further reduce company logo sizes on very small screens */
+  [data-testid*="job-card-"] .w-12.h-12,
+  [data-testid*="job-card-"] .w-16.h-16 {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+  }
+
+  [data-testid*="job-card-"] .w-16.h-16.sm\\:w-20.sm\\:h-20.md\\:w-24.md\\:h-24 {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+  }
+
+  /* Apply button on extra small screens */
+  [data-testid*="apply-now-"] {
+    height: 1.75rem !important;
+    padding: 0.375rem 0.875rem !important;
+    font-size: 0.8125rem !important;
+    min-width: 4.5rem !important;
+  }
+
+  /* Bottom section buttons spacing */
+  [data-testid*="job-card-"] .flex.items-center.justify-between .flex.flex-wrap {
+    gap: 0.375rem !important;
+  }
 }
 
 /* Touch device optimizations */
@@ -919,7 +1151,6 @@ footer {
     max-height: 70vh;
     overflow-y: auto;
   }
-}
 
 /* Tablet specific adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
