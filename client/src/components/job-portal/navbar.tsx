@@ -6,6 +6,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
@@ -23,7 +25,8 @@ import {
   Linkedin,
   Twitter,
   Youtube,
-  Mail
+  Mail,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -100,20 +103,39 @@ export function Navbar() {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')} data-testid="menu-profile">
-                  <User className="w-4 h-4 mr-2 text-theme-muted" />
-                  <span className="text-theme-muted">Account Details</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/my-applications')} data-testid="menu-applications">
-                  <FileText className="w-4 h-4 mr-2 text-theme-muted" />
-                  <span className="text-theme-muted">My Applications</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
-                  <LogOut className="w-4 h-4 mr-2 text-theme-muted" />
-                  <span className="text-theme-muted">Sign Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/profile')}
+                      data-testid="profile-menu-item"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Account Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/my-applications')}
+                      data-testid="my-applications-menu-item"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      My Applications
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/deleted-posts')}
+                      data-testid="deleted-posts-menu-item"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Deleted Posts
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      data-testid="sign-out-menu-item"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Mobile menu button */}
