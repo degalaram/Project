@@ -980,7 +980,7 @@ export class MemStorage implements IStorage {
     this.deletedPosts.delete(id);
   }
 
-  async softDeleteJob(jobId: string): Promise<any> {
+  async softDeleteJob(jobId: string, userId?: string): Promise<any> {
     const job = await this.getJob(jobId);
     if (!job) {
       throw new Error('Job not found');
@@ -989,7 +989,7 @@ export class MemStorage implements IStorage {
     // Create deleted post for the job
     const deletedPost = {
       id: randomUUID(),
-      userId: 'system', // System deleted
+      userId: userId || 'system', // Use provided userId or default to system
       jobId: jobId,
       job: job,
       deletedAt: new Date(),
