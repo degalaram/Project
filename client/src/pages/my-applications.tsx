@@ -116,6 +116,25 @@ export default function MyApplications() {
         </div>
 
         {/* Applications List */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Applications</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track and manage your job applications
+            </p>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {applicationsWithJobs.length}
+              </div>
+              <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Total Applications
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-6">
           {applicationsWithJobs.length === 0 ? (
             <Card>
