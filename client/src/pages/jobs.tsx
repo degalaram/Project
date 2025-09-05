@@ -458,43 +458,67 @@ export default function Jobs() {
                       data-testid={`job-card-${job.id}`}
                     >
                       <CardContent className="p-3 sm:p-4 md:p-6">
-                        {/* Mobile-Optimized Header */}
-                        <div className="flex items-start space-x-3 mb-4">
-                          {/* Single Company Logo - Responsive Size */}
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white border-2 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                        {/* Header with Company Logos */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start space-x-3 flex-1">
+                            {/* Left Company Logo */}
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white border-2 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                              {job.company.logo || getCompanyLogo(job.company) ? (
+                                <img 
+                                  src={job.company.logo || getCompanyLogo(job.company)!} 
+                                  alt={job.company.name}
+                                  className="w-8 h-8 sm:w-12 sm:h-12 object-contain rounded"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `<div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-sm sm:text-lg font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <span className="text-sm sm:text-lg font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Job Info */}
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 leading-tight">
+                                {job.title}
+                              </CardTitle>
+                              <p className="text-blue-600 dark:text-blue-400 font-medium mb-1 text-sm sm:text-base">{job.company.name}</p>
+                              <div className="flex items-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1">
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                                <span className="truncate">{job.location}</span>
+                              </div>
+                              <div className="text-green-600 font-semibold text-sm sm:text-base md:text-lg">
+                                {job.salary}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Right Company Logo - Larger */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
                             {job.company.logo || getCompanyLogo(job.company) ? (
                               <img 
                                 src={job.company.logo || getCompanyLogo(job.company)!} 
                                 alt={job.company.name}
-                                className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain rounded"
+                                className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain rounded-lg"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   const parent = target.parentElement;
                                   if (parent) {
-                                    parent.innerHTML = `<div class="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-sm sm:text-lg md:text-xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
+                                    parent.innerHTML = `<div class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">${job.company.name.charAt(0).toUpperCase()}</span></div>`;
                                   }
                                 }}
                               />
                             ) : (
-                              <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <span className="text-sm sm:text-lg md:text-xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
+                              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">{job.company.name.charAt(0).toUpperCase()}</span>
                               </div>
                             )}
-                          </div>
-                          
-                          {/* Job Info - Mobile Optimized */}
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 leading-tight">
-                              {job.title}
-                            </CardTitle>
-                            <p className="text-blue-600 dark:text-blue-400 font-medium mb-1 text-sm sm:text-base">{job.company.name}</p>
-                            <div className="flex items-center text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1">
-                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
-                              <span className="truncate">{job.location}</span>
-                            </div>
-                            <div className="text-green-600 font-semibold text-sm sm:text-base md:text-lg">
-                              {job.salary}
-                            </div>
                           </div>
                         </div>
 
