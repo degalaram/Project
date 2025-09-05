@@ -404,6 +404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "URL is required" });
       }
 
+      // Get available companies to map to real company IDs
+      const companies = await storage.getCompanies();
+      
       // Enhanced job analysis with better data extraction simulation
       let mockAnalysis = {
         title: "Software Developer - Fresh Graduate",
@@ -421,27 +424,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         closingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         batchEligible: "2024",
         isActive: true,
-        companyId: "accenture-id" // Default company for demo
+        companyId: companies.length > 0 ? companies[0].id : "" // Use first available company
       };
 
-      // Try to extract more specific data based on URL patterns
+      // Try to extract more specific data based on URL patterns and find matching companies
+      const findCompanyByName = (name: string) => {
+        return companies.find(company => 
+          company.name.toLowerCase().includes(name.toLowerCase())
+        );
+      };
+
       if (url.includes('microsoft.com')) {
+        const company = findCompanyByName('microsoft');
         mockAnalysis.title = "Software Engineer - Apprenticeship";
-        mockAnalysis.companyId = "microsoft-id";
+        mockAnalysis.companyId = company ? company.id : mockAnalysis.companyId;
         mockAnalysis.salary = "₹8-12 LPA";
         mockAnalysis.description = "Join Microsoft as a Software Engineer Apprentice. Work with latest technologies including Azure, .NET, and more.";
         mockAnalysis.skills = "C#, .NET, Azure, JavaScript, Python, SQL Server";
       } else if (url.includes('accenture.com')) {
+        const company = findCompanyByName('accenture');
         mockAnalysis.title = "Associate Software Engineer";
-        mockAnalysis.companyId = "accenture-id";
+        mockAnalysis.companyId = company ? company.id : mockAnalysis.companyId;
         mockAnalysis.salary = "₹4.5-6 LPA";
       } else if (url.includes('tcs.com')) {
+        const company = findCompanyByName('tcs');
         mockAnalysis.title = "Assistant System Engineer";
-        mockAnalysis.companyId = "tcs-id";
+        mockAnalysis.companyId = company ? company.id : mockAnalysis.companyId;
         mockAnalysis.salary = "₹3.5-4.5 LPA";
       } else if (url.includes('infosys.com')) {
+        const company = findCompanyByName('infosys');
         mockAnalysis.title = "Systems Engineer";
-        mockAnalysis.companyId = "infosys-id";
+        mockAnalysis.companyId = company ? company.id : mockAnalysis.companyId;
         mockAnalysis.salary = "₹4-5 LPA";
       }
 
