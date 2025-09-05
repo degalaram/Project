@@ -193,16 +193,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/jobs/:id", async (req, res) => {
+  // Get single job
+  app.get('/api/jobs/:id', async (req, res) => {
     try {
-      const job = await storage.getJob(req.params.id);
+      const job = await storage.getJobById(req.params.id);
       if (!job) {
-        return res.status(404).json({ message: "Job not found" });
+        return res.status(404).json({ error: 'Job not found' });
       }
       res.json(job);
     } catch (error) {
-      console.error("Error fetching job:", error);
-      res.status(500).json({ message: "Failed to fetch job" });
+      console.error('Get job error:', error);
+      res.status(500).json({ error: 'Failed to get job' });
+    }
+  });
+
+  // Delete job (soft delete - move to deleted posts)
+  app.delete('/api/jobs/:id', async (req, res) => {
+    try {
+      const jobId = req.params.id;
+
+      // Check if job exists
+      const job = await storage.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Create deleted post entry for the job
+      const deletedPost = await storage.softDeleteJob(jobId);
+
+      res.json({ message: 'Job deleted successfully', deletedPost });
+    } catch (error) {
+      console.error('Delete job error:', error);
+      res.status(500).json({ error: 'Failed to delete job' });
     }
   });
 
@@ -267,6 +289,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting application:", error);
       res.status(500).json({ message: "Failed to delete application" });
+    }
+  });
+
+  // Soft delete application (move to deleted posts)
+  app.post("/api/applications/:id/soft-delete", async (req, res) => {
+    try {
+      const deletedPost = await storage.softDeleteApplication(req.params.id);
+      res.json(deletedPost);
+    } catch (error) {
+      console.error("Error soft deleting application:", error);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // Get deleted posts for a user
+  app.get("/api/deleted-posts/user/:userId", async (req, res) => {
+    try {
+      const deletedPosts = await storage.getUserDeletedPosts(req.params.userId);
+      res.json(deletedPosts);
+    } catch (error) {
+      console.error("Error fetching deleted posts:", error);
+      res.status(500).json({ message: "Failed to fetch deleted posts" });
+    }
+  });
+
+  // Restore deleted post
+  app.post("/api/deleted-posts/:id/restore", async (req, res) => {
+    try {
+      const restoredApplication = await storage.restoreDeletedPost(req.params.id);
+      res.json(restoredApplication);
+    } catch (error) {
+      console.error("Error restoring deleted post:", error);
+      res.status(500).json({ message: "Failed to restore post" });
+    }
+  });
+
+  // Permanently delete post
+  app.delete("/api/deleted-posts/:id/permanent", async (req, res) => {
+    try {
+      await storage.permanentlyDeletePost(req.params.id);
+      res.json({ message: "Post permanently deleted" });
+    } catch (error) {
+      console.error("Error permanently deleting post:", error);
+      res.status(500).json({ message: "Failed to permanently delete post" });
     }
   });
 
@@ -346,15 +412,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const companyId = req.params.id;
       console.log(`Updating company with ID: ${companyId}`, req.body);
-      
+
       const validatedData = insertCompanySchema.parse(req.body);
       const updatedCompany = await storage.updateCompany(companyId, validatedData);
-      
+
       if (!updatedCompany) {
         console.log(`Company not found for update: ${companyId}`);
         return res.status(404).json({ message: "Company not found" });
       }
-      
+
       console.log(`Company updated successfully: ${companyId}`);
       res.json(updatedCompany);
     } catch (error) {
@@ -372,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       console.log(`Deleting company with ID: ${id}`);
-      
+
       const deleted = await storage.deleteCompany(id);
 
       if (!deleted) {
@@ -413,7 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get available companies to map to real company IDs
       const companies = await storage.getCompanies();
       console.log(`Found ${companies.length} companies for analysis`);
-      
+
       // Enhanced job analysis with better data extraction simulation
       let mockAnalysis = {
         title: "Software Developer - Fresh Graduate",
