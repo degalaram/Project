@@ -33,6 +33,7 @@ export interface IStorage {
   getJob(id: string): Promise<(Job & { company: Company }) | undefined>;
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
+  deleteJob(jobId: string): Promise<void>; // Added deleteJob to the interface
 
   // Applications
   createApplication(application: InsertApplication): Promise<Application>;
@@ -46,6 +47,12 @@ export interface IStorage {
 
   // Contact
   createContact(contact: InsertContact): Promise<Contact>;
+
+  // Deleted Posts
+  addDeletedPost(post: any): Promise<void>;
+  getDeletedPosts(): Promise<any[]>;
+  deletePostFromDeleted(id: string): Promise<void>;
+  softDeleteJob(jobId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -55,7 +62,8 @@ export class MemStorage implements IStorage {
   private courses: Map<string, Course>;
   private applications: Map<string, Application>;
   private contacts: Map<string, Contact>;
-  private passwordResetOtps: Map<string, { otp: string; expiresAt: Date }>;
+  private passwordResetOtps: Map<string, {otp: string; expiresAt: Date }>;
+  private deletedPosts = new Map<string, any>();
 
   constructor() {
     this.users = new Map();
@@ -741,6 +749,36 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  // Helper to save jobs (for MemStorage)
+  private async saveJobs(): Promise<void> {
+    // In a real scenario, this would persist to a file or database.
+    // For this in-memory store, no action is strictly needed for persistence,
+    // but it's good practice to have a placeholder if storage were more complex.
+  }
+
+  // Helper to save applications (for MemStorage)
+  private async saveApplications(): Promise<void> {
+    // Similar to saveJobs, placeholder for persistence.
+  }
+
+  async deleteJob(jobId: string): Promise<void> {
+    const job = this.jobs.get(jobId);
+    if (job) {
+      this.jobs.delete(jobId);
+      // In a real scenario, you might want to save this change.
+      // For this in-memory store, the change is immediate.
+    }
+
+    // Also remove any applications for this job
+    Array.from(this.applications.entries()).forEach(([key, app]) => {
+      if (app.jobId === jobId) {
+        this.applications.delete(key);
+      }
+    });
+    // In a real scenario, you might want to save this change.
+  }
+
+
   // Application methods
   async createApplication(insertApplication: InsertApplication): Promise<Application> {
     const id = randomUUID();
@@ -820,7 +858,7 @@ export class MemStorage implements IStorage {
     // First, delete all jobs associated with this company
     const jobsToDelete = Array.from(this.jobs.values()).filter(job => job.companyId === id);
     jobsToDelete.forEach(job => this.jobs.delete(job.id));
-    
+
     // Then delete the company
     const deleted = this.companies.delete(id);
     return deleted;
@@ -861,7 +899,112 @@ export class MemStorage implements IStorage {
   async clearPasswordResetOtp(email: string): Promise<void> {
     this.passwordResetOtps.delete(email);
   }
-}
+
+  // Missing getJobById method (alias for getJob)
+  async getJobById(id: string): Promise<(Job & { company: Company }) | undefined> {
+    return this.getJob(id);
+  }
+
+  // Deleted Posts methods
+  async addDeletedPost(post: any): Promise<void> {
+    const id = randomUUID();
+    this.deletedPosts.set(id, { ...post, id, deletedAt: new Date() });
+  }
+
+  async getUserDeletedPosts(userId: string): Promise<any[]> {
+    const deletedPosts = Array.from(this.deletedPosts.values());
+    return deletedPosts.filter(post => post.userId === userId);
+  }
+
+  async softDeleteApplication(applicationId: string): Promise<any> {
+    const application = this.applications.get(applicationId);
+    if (!application) {
+      throw new Error('Application not found');
+    }
+
+    const job = await this.getJob(application.jobId);
+    if (!job) {
+      throw new Error('Job not found');
+    }
+
+    // Create deleted post
+    const deletedPost = {
+      id: randomUUID(),
+      userId: application.userId,
+      jobId: application.jobId,
+      applicationId: applicationId,
+      job: job,
+      deletedAt: new Date(),
+    };
+
+    this.deletedPosts.set(deletedPost.id, deletedPost);
+
+    // Remove from applications
+    this.applications.delete(applicationId);
+
+    return deletedPost;
+  }
+
+  async restoreDeletedPost(deletedPostId: string): Promise<any> {
+    const deletedPost = this.deletedPosts.get(deletedPostId);
+    if (!deletedPost) {
+      throw new Error('Deleted post not found');
+    }
+
+    // Restore the application
+    const restoredApplication: Application = {
+      id: deletedPost.applicationId || randomUUID(),
+      userId: deletedPost.userId,
+      jobId: deletedPost.jobId,
+      status: null,
+      appliedAt: new Date(),
+    };
+
+    this.applications.set(restoredApplication.id, restoredApplication);
+
+    // Remove from deleted posts
+    this.deletedPosts.delete(deletedPostId);
+
+    return restoredApplication;
+  }
+
+  async permanentlyDeletePost(deletedPostId: string): Promise<void> {
+    this.deletedPosts.delete(deletedPostId);
+  }
+
+  async getDeletedPosts(): Promise<any[]> {
+    return Array.from(this.deletedPosts.values());
+  }
+
+  async deletePostFromDeleted(id: string): Promise<void> {
+    this.deletedPosts.delete(id);
+  }
+
+  async softDeleteJob(jobId: string): Promise<any> {
+    const job = await this.getJob(jobId);
+    if (!job) {
+      throw new Error('Job not found');
+    }
+
+    // Create deleted post for the job
+    const deletedPost = {
+      id: randomUUID(),
+      userId: 'system', // System deleted
+      jobId: jobId,
+      job: job,
+      deletedAt: new Date(),
+      type: 'job'
+    };
+
+    this.deletedPosts.set(deletedPost.id, deletedPost);
+
+    // Remove the job from active jobs
+    this.jobs.delete(jobId);
+
+    return deletedPost;
+  }
+
+  }
 
 // Import database connection
 import { db } from "./db.js";
@@ -940,7 +1083,7 @@ export class DbStorage implements IStorage {
   async deleteCompany(id: string): Promise<boolean> {
     // First, delete all jobs associated with this company
     await db.delete(schema.jobs).where(eq(schema.jobs.companyId, id));
-    
+
     // Then delete the company
     const result = await db.delete(schema.companies).where(eq(schema.companies.id, id));
     return (result.rowCount || 0) > 0;
@@ -953,7 +1096,7 @@ export class DbStorage implements IStorage {
       .select()
       .from(schema.jobs)
       .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id));
-    
+
     return jobsWithCompanies.map(row => ({
       ...row.jobs,
       company: row.companies!
@@ -966,9 +1109,9 @@ export class DbStorage implements IStorage {
       .from(schema.jobs)
       .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id))
       .where(eq(schema.jobs.id, id));
-    
+
     if (!result[0]) return undefined;
-    
+
     return {
       ...result[0].jobs,
       company: result[0].companies!
@@ -988,6 +1131,15 @@ export class DbStorage implements IStorage {
     return updatedJob;
   }
 
+  async deleteJob(jobId: string): Promise<void> {
+    // Delete the job itself
+    await db.delete(schema.jobs).where(eq(schema.jobs.id, jobId));
+
+    // Also remove any applications for this job
+    await db.delete(schema.applications).where(eq(schema.applications.jobId, jobId));
+  }
+
+
   // Application methods
   async createApplication(application: InsertApplication): Promise<Application> {
     const [app] = await db.insert(schema.applications).values(application).returning();
@@ -998,7 +1150,7 @@ export class DbStorage implements IStorage {
     // Simplified version - you might want to improve this query
     const apps = await db.select().from(schema.applications).where(eq(schema.applications.userId, userId));
     const result = [];
-    
+
     for (const app of apps) {
       const job = await this.getJob(app.jobId);
       if (job) {
@@ -1008,7 +1160,7 @@ export class DbStorage implements IStorage {
         });
       }
     }
-    
+
     return result;
   }
 
@@ -1062,6 +1214,27 @@ export class DbStorage implements IStorage {
 
   async clearPasswordResetOtp(email: string): Promise<void> {
     this.passwordResetOtps.delete(email);
+  }
+
+  // Deleted Posts methods for DbStorage (placeholder, actual implementation would involve a separate table or soft delete)
+  async addDeletedPost(post: any): Promise<void> {
+    // In a real DB, you'd insert into a 'deleted_posts' table
+    // For this example, we'll simulate it by just logging
+    console.log("Adding post to deleted posts:", post);
+    // Example: await db.insert(schema.deletedPosts).values({ ...post, deletedAt: new Date() });
+  }
+
+  async getDeletedPosts(): Promise<any[]> {
+    // In a real DB, you'd select from 'deleted_posts' and potentially filter by date
+    console.log("Fetching deleted posts...");
+    // Example: return await db.select().from(schema.deletedPosts).where(gt(schema.deletedPosts.deletedAt, new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)));
+    return []; // Placeholder
+  }
+
+  async deletePostFromDeleted(id: string): Promise<void> {
+    // In a real DB, you'd delete from 'deleted_posts'
+    console.log(`Deleting post with ID ${id} from deleted posts.`);
+    // Example: await db.delete(schema.deletedPosts).where(eq(schema.deletedPosts.id, id));
   }
 }
 
