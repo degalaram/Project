@@ -27,7 +27,8 @@ import {
   Linkedin,
   Mail,
   Youtube,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { FaWhatsapp, FaTelegram } from 'react-icons/fa';
 import type { Job, Company } from '@shared/schema';
@@ -123,7 +124,7 @@ const getLevelColor = (level: string) => {
 
   const getCompanyLogo = (company: Company) => {
     const name = company.name.toLowerCase();
-    
+
     // Major tech companies with working logos
     if (name.includes('accenture')) return 'https://logo.clearbit.com/accenture.com';
     if (name.includes('tcs') || name.includes('tata consultancy')) return 'https://logo.clearbit.com/tcs.com';
@@ -139,7 +140,7 @@ const getLevelColor = (level: string) => {
     if (name.includes('ibm')) return 'https://logo.clearbit.com/ibm.com';
     if (name.includes('honeywell')) return 'https://logo.clearbit.com/honeywell.com';
     if (name.includes('adp')) return 'https://logo.clearbit.com/adp.com';
-    
+
     // Try to fetch logo from company website
     if (company.website) {
       try {
@@ -149,7 +150,7 @@ const getLevelColor = (level: string) => {
         return null;
       }
     }
-    
+
     return null;
   };
 
@@ -214,18 +215,40 @@ export default function Jobs() {
       });
       return response.json();
     },
-    onSuccess: (data, jobId) => {
-      setAppliedJobs(prev => [...prev, jobId]);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
       toast({
         title: 'Application submitted!',
-        description: 'Your application has been sent to the company. Check "My Applications" to track status.',
+        description: 'Your job application has been submitted successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Application failed',
-        description: error.message,
+        description: error.message || 'Failed to submit application',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await apiRequest('DELETE', `/api/jobs/${jobId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      toast({
+        title: 'Job deleted',
+        description: 'The job has been moved to deleted posts and can be restored within 5 days.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Delete failed',
+        description: error.message || 'Failed to delete job',
         variant: 'destructive',
       });
     },
@@ -257,24 +280,36 @@ export default function Jobs() {
     }
   }) : [];
 
+  const handleApply = (jobId: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    applyMutation.mutate(jobId);
+  };
+
+  const handleDeleteJob = (e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete this job? It will be moved to deleted posts and can be restored within 5 days.')) {
+      deleteJobMutation.mutate(jobId);
+    }
+  };
+
   const handleJobClick = (jobId: string) => {
     navigate(`/jobs/${jobId}`);
   };
 
-  const handleApplyJob = async (e: React.MouseEvent, job: JobWithCompany) => {
+  const handleApplyJob = (e: React.MouseEvent, job: JobWithCompany) => {
     e.stopPropagation();
-    
-    // Open the job application URL in a new tab
-    if (job.applyUrl) {
-      window.open(job.applyUrl, '_blank');
+    if (!user) {
+      navigate('/login');
+      return;
     }
-    
-    // Submit the application to track it
-    try {
-      await applyMutation.mutateAsync(job.id);
-    } catch (error) {
-      // Error is already handled by the mutation onError callback
-    }
+    applyMutation.mutate(job.id);
   };
 
   const handleShare = (e: React.MouseEvent, job: JobWithCompany, platform: string) => {
@@ -482,7 +517,7 @@ export default function Jobs() {
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Job Info */}
                             <div className="flex-1 min-w-0">
                               <CardTitle className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 leading-tight">
@@ -498,7 +533,7 @@ export default function Jobs() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Right Company Logo - Larger */}
                           <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
                             {job.company.logo || getCompanyLogo(job.company) ? (
@@ -548,75 +583,108 @@ export default function Jobs() {
                           )}
                         </div>
 
-                        {/* Mobile-Optimized Action Section */}
-                        <div className="flex flex-col space-y-3 pt-3 border-t border-gray-100">
-                          {/* Top Row: Experience Level + Application Status/Button */}
+                        {/* Bottom Section Layout */}
+                        <div className="pt-3 border-t border-gray-100">
                           <div className="flex items-center justify-between">
-                            <Badge className={getLevelColor(job.experienceLevel)} variant="outline">
-                              {job.experienceLevel}
-                            </Badge>
-                            
-                            {isApplied ? (
-                              <div className="flex items-center space-x-1.5">
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                                <span className="text-xs sm:text-sm text-green-600 font-medium">Applied</span>
-                              </div>
-                            ) : !isExpired ? (
+                            {/* Left Side: Action Buttons in Single Line */}
+                            <div className="flex items-center space-x-2">
+                              {/* Experience Badge */}
+                              <Badge className={`${getExperienceBadgeColor(job.experienceLevel)} px-2 py-1 text-xs font-medium`}>
+                                {job.experienceLevel === 'fresher' ? 'Fresher' : 'Experienced'}
+                              </Badge>
+
+                              {/* View Details Button */}
                               <Button
+                                variant="outline"
                                 size="sm"
-                                onClick={(e) => handleApplyJob(e, job)}
-                                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm h-8 px-3"
-                                data-testid={`apply-now-${job.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleJobClick(job.id);
+                                }}
+                                className="text-xs h-7 px-2"
+                                data-testid={`view-details-${job.id}`}
                               >
-                                Apply Now
+                                <Eye className="w-3 h-3 mr-1" />
+                                View Details
                               </Button>
-                            ) : (
-                              <span className="text-xs sm:text-sm text-gray-500">Expired</span>
-                            )}
-                          </div>
-                          
-                          {/* Bottom Row: Share Buttons + View Details */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-1">
+
+                              {/* Apply Button or Applied Status */}
+                              {isApplied ? (
+                                <div className="flex items-center space-x-1">
+                                  <CheckCircle className="w-3 h-3 text-green-600" />
+                                  <span className="text-xs text-green-600 font-medium">Applied</span>
+                                </div>
+                              ) : !isExpired ? (
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => handleApplyJob(e, job)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-xs h-7 px-2"
+                                  data-testid={`apply-now-${job.id}`}
+                                >
+                                  Apply Now
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-gray-500">Expired</span>
+                              )}
+
+                              {/* Delete Button */}
+                              {!isExpired && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => handleDeleteJob(e, job.id)}
+                                  className="text-xs h-7 px-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                                  data-testid={`delete-job-${job.id}`}
+                                  title="Delete Job"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Right Side: Social Media Icons */}
+                            <div className="flex items-center space-x-2">
                               <button
                                 onClick={(e) => handleShare(e, job, 'whatsapp')}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                                className="p-1 text-green-600 hover:bg-green-50 rounded-full transition-colors"
                                 title="Share on WhatsApp"
                                 data-testid={`share-whatsapp-${job.id}`}
                               >
-                                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <FaWhatsapp className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={(e) => handleShare(e, job, 'telegram')}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                                 title="Share on Telegram"
                                 data-testid={`share-telegram-${job.id}`}
                               >
-                                <FaTelegram className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <FaTelegram className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'instagram')}
+                                className="p-1 text-pink-600 hover:bg-pink-50 rounded-full transition-colors"
+                                title="Share on Instagram"
+                                data-testid={`share-instagram-${job.id}`}
+                              >
+                                <Instagram className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'gmail')}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Share via Gmail"
+                                data-testid={`share-gmail-${job.id}`}
+                              >
+                                <Mail className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={(e) => handleShare(e, job, 'copy')}
-                                className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                                className="p-1 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
                                 title="Copy Link"
                                 data-testid={`share-copy-${job.id}`}
                               >
-                                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <Share2 className="w-4 h-4" />
                               </button>
                             </div>
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleJobClick(job.id);
-                              }}
-                              className="text-xs sm:text-sm h-8 px-3"
-                              data-testid={`view-details-${job.id}`}
-                            >
-                              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
-                              <span>View Details</span>
-                            </Button>
                           </div>
                         </div>
                       </CardContent>
