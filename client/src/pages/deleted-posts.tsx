@@ -252,7 +252,7 @@ export default function DeletedPosts() {
                         )}
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2 items-center sm:items-end">
                         {daysLeft > 0 && (
                           <Button 
                             variant="outline" 
@@ -260,7 +260,7 @@ export default function DeletedPosts() {
                             onClick={() => handleRestorePost(deletedPost.id)}
                             disabled={restorePostMutation.isPending}
                             data-testid={`restore-post-${deletedPost.id}`}
-                            className="text-xs h-8"
+                            className="text-xs h-8 w-full sm:w-auto"
                           >
                             <RotateCcw className="w-3 h-3 mr-1" />
                             Restore
@@ -272,7 +272,7 @@ export default function DeletedPosts() {
                           onClick={() => handlePermanentDelete(deletedPost.id)}
                           disabled={permanentDeleteMutation.isPending}
                           data-testid={`permanent-delete-${deletedPost.id}`}
-                          className="text-xs h-8"
+                          className="text-xs h-8 w-full sm:w-auto"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Delete Forever
