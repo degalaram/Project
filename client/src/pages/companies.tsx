@@ -507,7 +507,7 @@ export default function Companies() {
     <div className="min-h-screen bg-background dark:bg-gray-900">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Companies</h1>
@@ -524,7 +524,7 @@ export default function Companies() {
           </AddCompanyDialog>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
           {companies.map((company) => (
             <Card key={company.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-4">
