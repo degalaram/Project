@@ -36,6 +36,8 @@ export default function JobDetails() {
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [hasApplied, setHasApplied] = useState(false);
+  const [pendingApplication, setPendingApplication] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function JobDetails() {
       navigate('/login');
     }
   }, [navigate, user.id]);
+
 
   const { data: job, isLoading } = useQuery<JobWithCompany>({
     queryKey: ['/api/jobs', params?.id],
@@ -85,6 +88,26 @@ export default function JobDetails() {
       });
     },
   });
+
+  // Handle window focus to detect return from external tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (pendingApplication && !hasApplied) {
+        // Track application when user returns
+        applyMutation.mutate();
+        setPendingApplication(false);
+        setShowSuccess(true);
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 3000);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [pendingApplication, hasApplied, applyMutation]);
 
   if (isLoading) {
     return (
@@ -284,22 +307,30 @@ export default function JobDetails() {
                     <p className="text-red-600 font-medium">Application Closed</p>
                     <p className="text-sm text-gray-600">The application deadline has passed.</p>
                   </div>
+                ) : showSuccess ? (
+                  <div className="text-center p-4 space-y-3">
+                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+                    <p className="text-green-600 font-medium">Applied Successfully!</p>
+                    <p className="text-sm text-gray-600">Your application has been submitted.</p>
+                  </div>
                 ) : (
                   <Button 
                     className="w-full" 
                     size="lg"
                     onClick={() => {
-                      // Open job application URL in new tab first
+                      // Open job application URL in new tab
                       if (job.applyUrl) {
                         window.open(job.applyUrl, '_blank');
+                        setPendingApplication(true);
+                      } else {
+                        // If no external URL, track application immediately
+                        applyMutation.mutate();
                       }
-                      // Then track internal application
-                      applyMutation.mutate();
                     }}
-                    disabled={applyMutation.isPending}
+                    disabled={applyMutation.isPending || pendingApplication}
                     data-testid="apply-now-button"
                   >
-                    {applyMutation.isPending ? 'Applying...' : 'Apply Now'}
+                    {pendingApplication ? 'Redirected...' : applyMutation.isPending ? 'Applying...' : 'Apply Now'}
                     <ExternalLink className="w-4 h-4 ml-2" />
                   </Button>
                 )}
