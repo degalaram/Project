@@ -309,7 +309,16 @@ export default function Jobs() {
       navigate('/login');
       return;
     }
-    applyMutation.mutate(job.id);
+    
+    // If job has an apply URL, open it in a new tab
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank');
+      // Still track the application internally
+      applyMutation.mutate(job.id);
+    } else {
+      // Fallback to internal application tracking
+      applyMutation.mutate(job.id);
+    }
   };
 
   const handleShare = (e: React.MouseEvent, job: JobWithCompany, platform: string) => {
@@ -586,10 +595,46 @@ export default function Jobs() {
                         {/* Bottom Section Layout */}
                         <div className="pt-3 border-t border-gray-100">
                           <div className="flex items-center justify-between">
-                            {/* Left Side: Action Buttons in Single Line */}
-                            <div className="flex items-center space-x-2">
+                            {/* Left Side: Social Media Icons (4 icons) */}
+                            <div className="flex items-center space-x-1 sm:space-x-2">
+                              <button
+                                onClick={(e) => handleShare(e, job, 'whatsapp')}
+                                className="p-1 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                                title="Share on WhatsApp"
+                                data-testid={`share-whatsapp-${job.id}`}
+                              >
+                                <FaWhatsapp className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'telegram')}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                title="Share on Telegram"
+                                data-testid={`share-telegram-${job.id}`}
+                              >
+                                <FaTelegram className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'instagram')}
+                                className="p-1 text-pink-600 hover:bg-pink-50 rounded-full transition-colors"
+                                title="Share on Instagram"
+                                data-testid={`share-instagram-${job.id}`}
+                              >
+                                <Instagram className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => handleShare(e, job, 'gmail')}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Share via Gmail"
+                                data-testid={`share-gmail-${job.id}`}
+                              >
+                                <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+
+                            {/* Right Side: Action Buttons */}
+                            <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2 flex-1">
                               {/* Experience Badge */}
-                              <Badge className={`${getExperienceBadgeColor(job.experienceLevel)} px-2 py-1 text-xs font-medium`}>
+                              <Badge className={`${getExperienceBadgeColor(job.experienceLevel)} px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-medium`}>
                                 {job.experienceLevel === 'fresher' ? 'Fresher' : 'Experienced'}
                               </Badge>
 
@@ -601,7 +646,7 @@ export default function Jobs() {
                                   e.stopPropagation();
                                   handleJobClick(job.id);
                                 }}
-                                className="text-xs h-7 px-2"
+                                className="text-xs h-6 sm:h-7 px-1 sm:px-2"
                                 data-testid={`view-details-${job.id}`}
                               >
                                 <Eye className="w-3 h-3 mr-1" />
@@ -618,7 +663,7 @@ export default function Jobs() {
                                 <Button
                                   size="sm"
                                   onClick={(e) => handleApplyJob(e, job)}
-                                  className="bg-blue-600 hover:bg-blue-700 text-xs h-7 px-2"
+                                  className="bg-blue-600 hover:bg-blue-700 text-xs h-6 sm:h-7 px-1 sm:px-2"
                                   data-testid={`apply-now-${job.id}`}
                                 >
                                   Apply Now
@@ -633,57 +678,13 @@ export default function Jobs() {
                                   variant="outline"
                                   size="sm"
                                   onClick={(e) => handleDeleteJob(e, job.id)}
-                                  className="text-xs h-7 px-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                                  className="text-xs h-6 sm:h-7 px-1 sm:px-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
                                   data-testid={`delete-job-${job.id}`}
                                   title="Delete Job"
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
                               )}
-                            </div>
-
-                            {/* Right Side: Social Media Icons */}
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={(e) => handleShare(e, job, 'whatsapp')}
-                                className="p-1 text-green-600 hover:bg-green-50 rounded-full transition-colors"
-                                title="Share on WhatsApp"
-                                data-testid={`share-whatsapp-${job.id}`}
-                              >
-                                <FaWhatsapp className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'telegram')}
-                                className="p-1 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                title="Share on Telegram"
-                                data-testid={`share-telegram-${job.id}`}
-                              >
-                                <FaTelegram className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'instagram')}
-                                className="p-1 text-pink-600 hover:bg-pink-50 rounded-full transition-colors"
-                                title="Share on Instagram"
-                                data-testid={`share-instagram-${job.id}`}
-                              >
-                                <Instagram className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'gmail')}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                title="Share via Gmail"
-                                data-testid={`share-gmail-${job.id}`}
-                              >
-                                <Mail className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleShare(e, job, 'copy')}
-                                className="p-1 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
-                                title="Copy Link"
-                                data-testid={`share-copy-${job.id}`}
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </button>
                             </div>
                           </div>
                         </div>
