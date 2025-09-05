@@ -25,6 +25,7 @@ export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompany(id: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: string, updates: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: string): Promise<boolean>;
 
   // Jobs
@@ -656,6 +657,20 @@ export class MemStorage implements IStorage {
     return company;
   }
 
+  async updateCompany(id: string, updates: Partial<InsertCompany>): Promise<Company | undefined> {
+    const existing = this.companies.get(id);
+    if (!existing) return undefined;
+
+    const updated: Company = {
+      ...existing,
+      ...updates,
+      id: existing.id, // Preserve original ID
+      createdAt: existing.createdAt // Preserve creation date
+    };
+    this.companies.set(id, updated);
+    return updated;
+  }
+
   // Job methods
   async getJobs(filters?: { experienceLevel?: string; location?: string; search?: string }): Promise<(Job & { company: Company })[]> {
     let jobs = Array.from(this.jobs.values());
@@ -912,6 +927,14 @@ export class DbStorage implements IStorage {
   async createCompany(insertCompany: InsertCompany): Promise<Company> {
     const [company] = await db.insert(schema.companies).values(insertCompany).returning();
     return company;
+  }
+
+  async updateCompany(id: string, updates: Partial<InsertCompany>): Promise<Company | undefined> {
+    const [updatedCompany] = await db.update(schema.companies)
+      .set(updates)
+      .where(eq(schema.companies.id, id))
+      .returning();
+    return updatedCompany;
   }
 
   async deleteCompany(id: string): Promise<boolean> {
