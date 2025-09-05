@@ -8,11 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Navbar } from '@/components/job-portal/navbar';
-import { 
-  Briefcase, 
-  MapPin, 
-  Clock, 
-  Building, 
+import {
+  Briefcase,
+  MapPin,
+  Clock,
+  Building,
   Trash2,
   ExternalLink,
   Calendar,
@@ -23,7 +23,7 @@ export default function MyApplications() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [user, setUser] = useState<any>({});
 
   // Check if user is logged in
@@ -66,6 +66,28 @@ export default function MyApplications() {
     },
   });
 
+  const softDeleteMutation = useMutation({
+    mutationFn: async (applicationId: string) => {
+      const response = await apiRequest('POST', `/api/applications/${applicationId}/soft-delete`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      toast({
+        title: 'Post deleted',
+        description: 'Your job application has been moved to deleted posts. It can be restored within 5 days.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Delete failed',
+        description: error.message || 'Failed to delete post',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Get job details for each application
   const applicationsWithJobs = Array.isArray(applications) ? applications.map((app: any) => {
     const job = Array.isArray(jobs) ? jobs.find((j: any) => j.id === app.jobId) : null;
@@ -75,6 +97,12 @@ export default function MyApplications() {
   const handleRemoveApplication = (applicationId: string) => {
     if (window.confirm('Are you sure you want to remove this application?')) {
       removeApplicationMutation.mutate(applicationId);
+    }
+  };
+
+  const handleSoftDelete = (applicationId: string) => {
+    if (window.confirm('Are you sure you want to delete this post? It will be moved to deleted posts and can be restored within 5 days.')) {
+      softDeleteMutation.mutate(applicationId);
     }
   };
 
@@ -99,7 +127,7 @@ export default function MyApplications() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
         <div className="mb-8">
@@ -111,26 +139,6 @@ export default function MyApplications() {
             <div className="text-right">
               <div className="text-4xl font-bold text-blue-600">{applicationsWithJobs.length}</div>
               <div className="text-sm text-gray-600 font-medium">Total Applications</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Applications List */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Applications</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Track and manage your job applications
-            </p>
-          </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {applicationsWithJobs.length}
-              </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                Total Applications
-              </div>
             </div>
           </div>
         </div>
@@ -157,10 +165,10 @@ export default function MyApplications() {
               const { job } = application;
               const appliedDate = new Date(application.createdAt || application.appliedAt);
               const isExpired = new Date(job.closingDate) < new Date();
-              
+
               return (
-                <Card 
-                  key={application.id} 
+                <Card
+                  key={application.id}
                   className="w-full hover:shadow-md transition-shadow"
                   data-testid={`application-card-${application.id}`}
                 >
@@ -205,12 +213,12 @@ export default function MyApplications() {
 
                     {/* Job Description */}
                     <p className="text-gray-700 text-xs sm:text-sm mb-4 leading-relaxed">
-                      {job.description.length > 150 
-                        ? `${job.description.substring(0, 150)}...` 
+                      {job.description.length > 150
+                        ? `${job.description.substring(0, 150)}...`
                         : job.description
                       }
                     </p>
-                    
+
                     {/* Skills */}
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                       {job.skills.split(',').slice(0, 6).map((skill: string, index: number) => (
@@ -224,31 +232,42 @@ export default function MyApplications() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     {/* Bottom Section - Status and Actions */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 gap-3 sm:gap-0">
                       <div className="text-xs sm:text-sm text-gray-600">
                         Application Status: <span className="text-green-600 font-medium">Submitted</span>
                       </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button 
-                          variant="outline" 
+
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleViewJob(job.id)}
                           data-testid={`view-job-${application.id}`}
-                          className="text-xs h-8"
+                          className="text-xs h-8 w-full sm:w-auto"
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
                           View Job
                         </Button>
-                        <Button 
-                          variant="destructive" 
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSoftDelete(application.id)}
+                          disabled={softDeleteMutation.isPending}
+                          data-testid={`delete-post-${application.id}`}
+                          className="text-xs h-8 w-full sm:w-auto text-orange-600 border-orange-300 hover:bg-orange-50"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete Post
+                        </Button>
+                        <Button
+                          variant="destructive"
                           size="sm"
                           onClick={() => handleRemoveApplication(application.id)}
                           disabled={removeApplicationMutation.isPending}
                           data-testid={`remove-application-${application.id}`}
-                          className="text-xs h-8"
+                          className="text-xs h-8 w-full sm:w-auto"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Remove
