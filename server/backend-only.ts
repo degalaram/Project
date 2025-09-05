@@ -38,14 +38,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  
+
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
-  
+
   next();
 });
 
@@ -63,9 +63,9 @@ app.post("/api/admin/verify-password", async (req, res) => {
   try {
     const { password } = req.body;
     const ADMIN_PASSWORD = '161417';
-    
+
     console.log('Admin verification attempt:', password);
-    
+
     if (password === ADMIN_PASSWORD) {
       console.log('Admin verification successful');
       res.json({ success: true, message: 'Admin verified' });
@@ -83,12 +83,12 @@ app.post("/api/admin/send-recovery-otp", async (req, res) => {
   try {
     const { email } = req.body;
     const ADMIN_EMAIL = 'ramdegala3@gmail.com';
-    
+
     if (email === ADMIN_EMAIL) {
       // Generate recovery OTP
       const recoveryOtp = '161417'; // Use same as admin password for simplicity
       console.log(`Admin recovery OTP: ${recoveryOtp}`);
-      
+
       res.json({ 
         success: true, 
         message: 'Recovery OTP sent',
@@ -108,7 +108,7 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const validatedData = insertUserSchema.parse(req.body);
     const existingUser = await storage.getUserByEmail(validatedData.email);
-    
+
     if (existingUser) {
       return res.status(400).json({ message: "User already exists with this email" });
     }
@@ -185,7 +185,7 @@ app.get("/api/jobs", async (req, res) => {
       location: location as string,
       search: search as string,
     };
-    
+
     const jobs = await storage.getJobs(filters);
     res.json(jobs);
   } catch (error) {
