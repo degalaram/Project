@@ -1,78 +1,72 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// Get API base URL from environment variable or use relative path for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.PROD ? 'https://your-render-backend.onrender.com' : 'http://localhost:5000');
+import { QueryClient } from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
-  }
-}
-
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  // Prepend API base URL if it's set and URL is relative
-  const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
-
-  // Log API calls in development for debugging
+// Determine API base URL based on environment
+const getApiBaseUrl = () => {
+  // In development, check if running in Replit
   if (import.meta.env.DEV) {
-    console.log(`API ${method} ${fullUrl}`);
+    // Use current hostname with port 5000 for Replit development
+    if (window.location.hostname.includes('replit.dev') || window.location.hostname.includes('repl.co')) {
+      return `${window.location.protocol}//${window.location.hostname.replace(/^\w+-/, '')}`; // Remove port prefix for Replit URLs
+    }
+    return "http://localhost:5000";
+  }
+  
+  // In production, use environment variable or fallback
+  return import.meta.env.VITE_API_URL || "https://project-eks8.onrender.com";
+};
+
+export const API_BASE_URL = getApiBaseUrl();
+
+// API request utility function
+export async function apiRequest(method: string, url: string, data?: any) {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const options: RequestInit = {
+    method,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+    options.body = JSON.stringify(data);
   }
 
-  const res = await fetch(fullUrl, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const response = await fetch(fullUrl, options);
+  
+  if (!response.ok) {
+    const errorData = await response.text();
+    throw new Error(errorData || `HTTP error! status: ${response.status}`);
+  }
 
-  await throwIfResNotOk(res);
-  return res;
+  return response;
 }
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    // Prepend API base URL if it's set and URL is relative
-    const url = queryKey.join("/") as string;
-    const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
-
-    // Log API calls in development for debugging
-    if (import.meta.env.DEV) {
-      console.log(`API GET ${fullUrl}`);
-    }
-
-    const res = await fetch(fullUrl, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      queryFn: async ({ queryKey }) => {
+        const url = `${API_BASE_URL}/api/${queryKey.join("/")}`;
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+      },
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
     mutations: {
-      retry: false,
+      retry: 1,
     },
   },
 });
