@@ -127,6 +127,13 @@ export function Navbar() {
                       <Trash2 className="w-4 h-4 mr-2" />
                       Deleted Posts
                     </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/deleted-companies')}
+                      data-testid="deleted-companies-menu-item"
+                    >
+                      <Building className="w-4 h-4 mr-2" />
+                      Deleted Companies
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={handleLogout}
