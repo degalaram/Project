@@ -223,6 +223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const jobId = req.params.id;
       const { userId } = req.body; // Get userId from request body
 
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+
       // Check if job exists
       const job = await storage.getJobById(jobId);
       if (!job) {
@@ -248,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: 'Job deleted successfully', deletedPost });
     } catch (error) {
       console.error('Delete job error:', error);
-      res.status(500).json({ error: 'Failed to delete job' });
+      res.status(500).json({ error: 'Failed to delete job', details: error.message });
     }
   });
 
@@ -480,22 +484,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const companyId = req.params.id;
       console.log(`Updating company with ID: ${companyId}`, req.body);
 
+      // Validate the data
       const validatedData = insertCompanySchema.parse(req.body);
-      const updatedCompany = await storage.updateCompany(companyId, validatedData);
-
-      if (!updatedCompany) {
+      
+      // Check if company exists first
+      const existingCompany = await storage.getCompany(companyId);
+      if (!existingCompany) {
         console.log(`Company not found for update: ${companyId}`);
         return res.status(404).json({ message: "Company not found" });
       }
 
+      const updatedCompany = await storage.updateCompany(companyId, validatedData);
+
+      if (!updatedCompany) {
+        console.log(`Failed to update company: ${companyId}`);
+        return res.status(500).json({ message: "Failed to update company" });
+      }
+
       console.log(`Company updated successfully: ${companyId}`);
-      res.json(updatedCompany);
+      res.json({ message: "Company updated successfully", company: updatedCompany });
     } catch (error) {
       console.error("Error updating company:", error);
       if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, details: error.stack });
       } else {
-        res.status(500).json({ message: "Failed to update company" });
+        res.status(500).json({ message: "Failed to update company", error: String(error) });
       }
     }
   });
@@ -581,7 +594,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = req.body;
       console.log(`Updating deleted company with ID: ${id}`, updateData);
 
-      const updatedCompany = await storage.updateDeletedCompany(id, updateData);
+      // Validate the data
+      const validatedData = insertCompanySchema.parse(updateData);
+
+      const updatedCompany = await storage.updateDeletedCompany(id, validatedData);
 
       if (!updatedCompany) {
         console.log(`Deleted company not found: ${id}`);
@@ -592,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: 'Deleted company updated successfully', company: updatedCompany });
     } catch (error) {
       console.error(`Error updating deleted company with ID ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to update deleted company' });
+      res.status(500).json({ message: 'Failed to update deleted company', details: error.message });
     }
   });
 
