@@ -135,21 +135,35 @@ export default function AdminJobs() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Populate form with analyzed data
-      setFormData(prev => ({
-        ...prev,
-        ...data,
-        closingDate: data.closingDate ? new Date(data.closingDate).toISOString().split('T')[0] : '',
-      }));
-      toast({
-        title: 'Job analyzed successfully',
-        description: 'Form has been populated with extracted job details. Please review and submit.',
-      });
+      // Check if analysis was successful
+      if (data.success && data.suggestedData) {
+        // Populate form with analyzed data
+        setFormData(prev => ({
+          ...prev,
+          title: data.suggestedData.title || prev.title,
+          description: data.suggestedData.description || prev.description,
+          location: data.suggestedData.location || prev.location,
+          experienceLevel: data.suggestedData.experienceLevel || prev.experienceLevel,
+          applyUrl: jobUrl, // Use the original URL as the apply URL
+          closingDate: data.suggestedData.closingDate ? new Date(data.suggestedData.closingDate).toISOString().split('T')[0] : 
+                      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default to 30 days from now
+        }));
+        
+        toast({
+          title: 'Job URL analyzed',
+          description: data.message || 'Basic job information has been populated. Please review and complete the form.',
+        });
+      } else {
+        toast({
+          title: 'Analysis completed',
+          description: data.message || 'URL analysis completed. Please fill in the job details manually.',
+        });
+      }
     },
     onError: (error) => {
       toast({
-        title: 'Failed to analyze job',
-        description: error.message,
+        title: 'Failed to analyze job URL',
+        description: error.message || 'Unable to analyze the job URL. Please fill in the details manually.',
         variant: 'destructive',
       });
     },
