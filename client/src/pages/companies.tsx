@@ -349,7 +349,7 @@ export default function Companies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (companyId: string) => {
-      const response = await apiRequest('DELETE', `/api/companies/${companyId}`);
+      const response = await apiRequest('POST', `/api/companies/${companyId}/soft-delete`);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete company: ${errorText}`);
@@ -358,9 +358,10 @@ export default function Companies() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deleted-companies'] });
       toast({
-        title: "Company deleted successfully",
-        description: "The company and all associated jobs have been removed from the database.",
+        title: "Company moved to trash",
+        description: "The company has been moved to deleted companies. You can restore it within 7 days.",
       });
     },
     onError: (error: any) => {
@@ -404,7 +405,7 @@ export default function Companies() {
   };
 
   const handleDeleteCompany = (companyId: string, companyName: string) => {
-    if (window.confirm(`Are you sure you want to delete ${companyName}? This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to move ${companyName} to trash? You can restore it from deleted companies within 7 days.`)) {
       deleteMutation.mutate(companyId);
     }
   };
