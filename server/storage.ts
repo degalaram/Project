@@ -1135,30 +1135,6 @@ export class MemStorage implements IStorage {
     this.deletedPosts.delete(id);
   }
 
-  async softDeleteJob(jobId: string, userId?: string): Promise<any> {
-    const job = await this.getJob(jobId);
-    if (!job) {
-      throw new Error('Job not found');
-    }
-
-    // Create deleted post for the job
-    const deletedPost = {
-      id: randomUUID(),
-      userId: userId || 'system', // Use provided userId or default to system
-      jobId: jobId,
-      job: job,
-      deletedAt: new Date(),
-      type: 'job'
-    };
-
-    this.deletedPosts.set(deletedPost.id, deletedPost);
-
-    // Remove the job from active jobs
-    this.jobs.delete(jobId);
-
-    return deletedPost;
-  }
-
   }
 
 // Import database connection
