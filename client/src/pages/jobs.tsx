@@ -519,7 +519,7 @@ export default function Jobs() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-start space-x-3 flex-1">
                             {/* Left Company Logo */}
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white border-2 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
                               {job.company.logo || getCompanyLogo(job.company) ? (
                                 <img 
                                   src={job.company.logo || getCompanyLogo(job.company)!} 
@@ -557,7 +557,7 @@ export default function Jobs() {
                           </div>
 
                           {/* Right Company Logo - Larger */}
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white border-2 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ml-4">
                             {job.company.logo || getCompanyLogo(job.company) ? (
                               <img 
                                 src={job.company.logo || getCompanyLogo(job.company)!} 
@@ -612,7 +612,7 @@ export default function Jobs() {
                             <div className="flex items-center space-x-1 sm:space-x-2">
                               <button
                                 onClick={(e) => handleShare(e, job, 'whatsapp')}
-                                className="p-1 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                                className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-gray-700 rounded-full transition-colors"
                                 title="Share on WhatsApp"
                                 data-testid={`share-whatsapp-${job.id}`}
                               >
@@ -620,7 +620,7 @@ export default function Jobs() {
                               </button>
                               <button
                                 onClick={(e) => handleShare(e, job, 'telegram')}
-                                className="p-1 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-full transition-colors"
                                 title="Share on Telegram"
                                 data-testid={`share-telegram-${job.id}`}
                               >
@@ -628,7 +628,7 @@ export default function Jobs() {
                               </button>
                               <button
                                 onClick={(e) => handleShare(e, job, 'instagram')}
-                                className="p-1 text-pink-600 hover:bg-pink-50 rounded-full transition-colors"
+                                className="p-1 text-pink-600 hover:bg-pink-50 dark:hover:bg-gray-700 rounded-full transition-colors"
                                 title="Share on Instagram"
                                 data-testid={`share-instagram-${job.id}`}
                               >
@@ -636,7 +636,7 @@ export default function Jobs() {
                               </button>
                               <button
                                 onClick={(e) => handleShare(e, job, 'gmail')}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-gray-700 rounded-full transition-colors"
                                 title="Share via Gmail"
                                 data-testid={`share-gmail-${job.id}`}
                               >
