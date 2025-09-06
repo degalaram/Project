@@ -261,17 +261,6 @@ export default function MyApplications() {
                           <Trash2 className="w-3 h-3 mr-1" />
                           Delete Post
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveApplication(application.id)}
-                          disabled={removeApplicationMutation.isPending}
-                          data-testid={`remove-application-${application.id}`}
-                          className="text-xs h-8 w-full sm:w-auto"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Remove
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
