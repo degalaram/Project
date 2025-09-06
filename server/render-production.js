@@ -632,24 +632,30 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  console.error('Error:', err);
-  res.status(status).json({ message });
-});
-
-// Job deletion endpoint
+// Job deletion endpoint (soft delete)
 app.delete("/api/jobs/:id", (req, res) => {
   try {
     const jobId = req.params.id;
-    if (storage.jobs.has(jobId)) {
-      storage.jobs.delete(jobId);
-      res.json({ message: "Job deleted successfully" });
-    } else {
-      res.status(404).json({ message: "Job not found" });
+    // Accept userId from query parameter to avoid issues with DELETE body
+    const userId = req.query.userId || req.body?.userId || null;
+    const job = storage.jobs.get(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
     }
+
+    // Create deleted post entry for the job with user context
+    const deletedPost = {
+      ...job,
+      userId: userId, // Store which user deleted this
+      deletedAt: new Date(),
+      originalType: 'job'
+    };
+
+    deletedPosts.set(jobId, deletedPost);
+    storage.jobs.delete(jobId);
+    
+    res.json({ message: "Job deleted successfully", deletedPost });
   } catch (error) {
     console.error("Error deleting job:", error);
     res.status(500).json({ message: "Failed to delete job" });
@@ -746,6 +752,18 @@ app.get("/api/deleted-posts", (req, res) => {
   } catch (error) {
     console.error("Error fetching deleted posts:", error);
     res.status(500).json({ message: "Failed to fetch deleted posts" });
+  }
+});
+
+// Get user-specific deleted posts endpoint
+app.get("/api/deleted-posts/user/:userId", (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const posts = Array.from(deletedPosts.values()).filter(post => post.userId === userId);
+    res.json(posts);
+  } catch (error) {
+    console.error("Error fetching user deleted posts:", error);
+    res.status(500).json({ message: "Failed to fetch user deleted posts" });
   }
 });
 
@@ -943,9 +961,33 @@ app.delete("/api/courses/:id", (req, res) => {
   }
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Endpoint not found' });
+// Serve static files from public directory
+app.use(express.static('public', {
+  maxAge: '1d',
+  etag: false,
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
+
+// SPA routing fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  // Only serve index.html for non-API routes
+  if (!req.path.startsWith('/api')) {
+    res.sendFile('index.html', { root: 'public' });
+  } else {
+    res.status(404).json({ message: 'API endpoint not found' });
+  }
+});
+
+// Error handling middleware (must be last)
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  console.error('Error:', err);
+  res.status(status).json({ message });
 });
 
 // FIXED: Use proper port for Render
