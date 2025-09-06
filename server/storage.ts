@@ -28,6 +28,13 @@ export interface IStorage {
   updateCompany(id: string, updates: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: string): Promise<boolean>;
 
+  // Deleted Companies
+  softDeleteCompany(id: string): Promise<any>;
+  getDeletedCompanies(): Promise<any[]>;
+  restoreDeletedCompany(id: string): Promise<Company | undefined>;
+  permanentlyDeleteCompany(id: string): Promise<boolean>;
+  updateDeletedCompany(id: string, updateData: any): Promise<any>;
+
   // Jobs
   getJobs(filters?: { experienceLevel?: string; location?: string; search?: string }): Promise<(Job & { company: Company })[]>;
   getJob(id: string): Promise<(Job & { company: Company }) | undefined>;
@@ -44,6 +51,8 @@ export interface IStorage {
   getCourses(category?: string): Promise<Course[]>;
   getCourse(id: string): Promise<Course | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: string, updates: Partial<InsertCourse>): Promise<Course | undefined>;
+  deleteCourse(courseId: string): Promise<boolean>; // Added deleteCourse to the interface
 
   // Contact
   createContact(contact: InsertContact): Promise<Contact>;
@@ -64,6 +73,7 @@ export class MemStorage implements IStorage {
   private contacts: Map<string, Contact>;
   private passwordResetOtps: Map<string, {otp: string; expiresAt: Date }>;
   private deletedPosts = new Map<string, any>();
+  private deletedCompanies = new Map<string, any>();
 
   constructor() {
     this.users = new Map();
@@ -421,7 +431,7 @@ export class MemStorage implements IStorage {
         category: "programming",
         imageUrl: "/images/python_course.png",
         courseUrl: "https://www.python.org/about/gettingstarted/",
-        price: "₹2,999",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -434,7 +444,7 @@ export class MemStorage implements IStorage {
         category: "web-development",
         imageUrl: "/images/javascript_course.png",
         courseUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-        price: "₹3,999",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -447,7 +457,7 @@ export class MemStorage implements IStorage {
         category: "web-development",
         imageUrl: "/images/react_course.png",
         courseUrl: "https://react.dev/learn",
-        price: "₹4,999",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -460,7 +470,7 @@ export class MemStorage implements IStorage {
         category: "backend",
         imageUrl: "/images/nodejs_course.png",
         courseUrl: "https://nodejs.org/en/docs/",
-        price: "₹5,499",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -473,7 +483,7 @@ export class MemStorage implements IStorage {
         category: "programming",
         imageUrl: "/images/dsa_course.png",
         courseUrl: "https://www.geeksforgeeks.org/data-structures/",
-        price: "₹6,999",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -486,7 +496,7 @@ export class MemStorage implements IStorage {
         category: "data-science",
         imageUrl: "/images/ml_course.png",
         courseUrl: "https://www.tensorflow.org/learn/ml-basics",
-        price: "₹8,999",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -499,7 +509,7 @@ export class MemStorage implements IStorage {
         category: "cybersecurity",
         imageUrl: "/images/cybersecurity_course.png",
         courseUrl: "https://www.cybrary.it/courses/cybersecurity-fundamentals/",
-        price: "₹7,499",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -512,7 +522,7 @@ export class MemStorage implements IStorage {
         category: "database",
         imageUrl: "/images/database_course.png",
         courseUrl: "https://www.khanacademy.org/computing/computer-programming/sql",
-        price: "₹3,499",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -525,7 +535,7 @@ export class MemStorage implements IStorage {
         category: "cloud",
         imageUrl: "/images/cloud_computing_course.png",
         courseUrl: "https://aws.amazon.com/training/cloud-essentials/",
-        price: "₹6,000",
+        price: "Free",
         createdAt: new Date(),
       },
       {
@@ -538,7 +548,7 @@ export class MemStorage implements IStorage {
         category: "devops",
         imageUrl: "/images/devops_course.png",
         courseUrl: "https://azure.microsoft.com/en-us/services/devops/",
-        price: "₹7,500",
+        price: "Free",
         createdAt: new Date(),
       }
     ];
@@ -834,11 +844,31 @@ export class MemStorage implements IStorage {
       category: insertCourse.category,
       imageUrl: insertCourse.imageUrl || null,
       courseUrl: insertCourse.courseUrl || null,
-      price: insertCourse.price || null,
+      price: "Free", // All courses are now free
       createdAt: new Date(),
     };
     this.courses.set(id, course);
     return course;
+  }
+
+  async updateCourse(id: string, updates: Partial<InsertCourse>): Promise<Course | undefined> {
+    const existing = this.courses.get(id);
+    if (!existing) return undefined;
+
+    const updated: Course = {
+      ...existing,
+      ...updates,
+      id: existing.id, // Preserve original ID
+      createdAt: existing.createdAt, // Preserve creation date
+      price: "Free" // Ensure all courses remain free
+    };
+    this.courses.set(id, updated);
+    return updated;
+  }
+
+  async deleteCourse(courseId: string): Promise<boolean> {
+    const deleted = this.courses.delete(courseId);
+    return deleted;
   }
 
   // Contact methods
@@ -864,6 +894,107 @@ export class MemStorage implements IStorage {
     return deleted;
   }
 
+  // Company soft delete methods
+  async softDeleteCompany(id: string): Promise<any> {
+    const company = this.companies.get(id);
+    if (!company) {
+      return null;
+    }
+
+    // Move company to deleted companies with timestamp
+    const deletedCompany = {
+      ...company,
+      deletedAt: new Date(),
+      originalType: 'company'
+    };
+
+    this.deletedCompanies.set(id, deletedCompany);
+    this.companies.delete(id);
+
+    return deletedCompany;
+  }
+
+  async getDeletedCompanies(): Promise<any[]> {
+    const deletedCompanies = Array.from(this.deletedCompanies.values());
+
+    // Filter out companies older than 7 days and clean them up
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const activeDeleted = deletedCompanies.filter(company => {
+      const deletedDate = new Date(company.deletedAt);
+      if (deletedDate < sevenDaysAgo) {
+        // Automatically remove expired deleted companies
+        this.deletedCompanies.delete(company.id);
+        return false;
+      }
+      return true;
+    });
+
+    return activeDeleted;
+  }
+
+  async restoreDeletedCompany(id: string): Promise<Company | undefined> {
+    console.log(`Attempting to restore deleted company: ${id}`);
+    const deletedCompany = this.deletedCompanies.get(id);
+
+    if (!deletedCompany) {
+      console.log(`Deleted company not found: ${id}`);
+      return null;
+    }
+
+    // Create a new company from the deleted company data
+    const restoredCompany = {
+      id: deletedCompany.id,
+      name: deletedCompany.name,
+      description: deletedCompany.description,
+      website: deletedCompany.website,
+      linkedinUrl: deletedCompany.linkedinUrl,
+      logo: deletedCompany.logo,
+      location: deletedCompany.location,
+      createdAt: new Date(), // Set new creation date
+    };
+
+    // Add back to companies
+    this.companies.set(id, restoredCompany);
+
+    // Remove from deleted companies
+    this.deletedCompanies.delete(id);
+
+    console.log(`Company restored successfully: ${id}`);
+    return restoredCompany;
+  }
+
+  async updateDeletedCompany(id: string, updateData: any) {
+    console.log(`Attempting to update deleted company: ${id}`);
+    const deletedCompany = this.deletedCompanies.get(id);
+
+    if (!deletedCompany) {
+      console.log(`Deleted company not found: ${id}`);
+      return null;
+    }
+
+    // Update the deleted company with new data
+    const updatedDeletedCompany = {
+      ...deletedCompany,
+      name: updateData.name || deletedCompany.name,
+      description: updateData.description !== undefined ? updateData.description : deletedCompany.description,
+      website: updateData.website !== undefined ? updateData.website : deletedCompany.website,
+      linkedinUrl: updateData.linkedinUrl !== undefined ? updateData.linkedinUrl : deletedCompany.linkedinUrl,
+      logo: updateData.logo !== undefined ? updateData.logo : deletedCompany.logo,
+      location: updateData.location !== undefined ? updateData.location : deletedCompany.location,
+    };
+
+    // Save the updated deleted company
+    this.deletedCompanies.set(id, updatedDeletedCompany);
+
+    console.log(`Deleted company updated successfully: ${id}`);
+    return updatedDeletedCompany;
+  }
+
+  async permanentlyDeleteCompany(id: string): Promise<boolean> {
+    const deleted = this.deletedCompanies.delete(id);
+    return deleted;
+  }
+
   // Password reset methods
   async updateUserPassword(email: string, newPassword: string): Promise<void> {
     const user = await this.getUserByEmail(email);
@@ -878,7 +1009,7 @@ export class MemStorage implements IStorage {
 
   async storePasswordResetOtp(email: string, otp: string): Promise<void> {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
-    this.passwordResetOtps.set(email, { otp, expiresAt });
+    this.passwordResetOtps.set(email, {otp, expiresAt });
   }
 
   async verifyPasswordResetOtp(email: string, otp: string): Promise<boolean> {
@@ -1009,7 +1140,7 @@ export class MemStorage implements IStorage {
 // Import database connection
 import { db } from "./db.js";
 import * as schema from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, gt } from "drizzle-orm";
 
 // Database storage implementation using Drizzle ORM
 export class DbStorage implements IStorage {
@@ -1171,19 +1302,59 @@ export class DbStorage implements IStorage {
   // Course methods
   async getCourses(category?: string): Promise<Course[]> {
     if (category) {
-      return await db.select().from(schema.courses).where(eq(schema.courses.category, category));
+      // Make all courses free when fetching
+      const courses = await db.select().from(schema.courses).where(eq(schema.courses.category, category));
+      return courses.map(course => ({ ...course, price: "Free" }));
     }
-    return await db.select().from(schema.courses);
+    // Make all courses free when fetching
+    const allCourses = await db.select().from(schema.courses);
+    return allCourses.map(course => ({ ...course, price: "Free" }));
   }
 
   async getCourse(id: string): Promise<Course | undefined> {
     const courses = await db.select().from(schema.courses).where(eq(schema.courses.id, id));
-    return courses[0];
+    if (courses.length > 0) {
+      // Make the fetched course free
+      return { ...courses[0], price: "Free" };
+    }
+    return undefined;
   }
 
   async createCourse(insertCourse: InsertCourse): Promise<Course> {
-    const [course] = await db.insert(schema.courses).values(insertCourse).returning();
-    return course;
+    try {
+      const courseData = {
+        ...insertCourse,
+        price: "Free", // Ensure all created courses are free
+      };
+      const [newCourse] = await db.insert(schema.courses).values(courseData).returning();
+      console.log('Course created successfully:', newCourse.title);
+      return newCourse;
+    } catch (error) {
+      console.error('Error creating course:', error);
+      throw error;
+    }
+  }
+
+  async updateCourse(id: string, updates: Partial<InsertCourse>): Promise<Course | undefined> {
+    try {
+      const courseData = {
+        ...updates,
+        price: "Free", // Ensure all courses remain free
+      };
+      const [updatedCourse] = await db.update(schema.courses)
+        .set(courseData)
+        .where(eq(schema.courses.id, id))
+        .returning();
+      return updatedCourse;
+    } catch (error) {
+      console.error('Error updating course:', error);
+      throw error;
+    }
+  }
+
+  async deleteCourse(courseId: string): Promise<boolean> {
+    const result = await db.delete(schema.courses).where(eq(schema.courses.id, courseId));
+    return (result.rowCount || 0) > 0;
   }
 
   // Contact methods
