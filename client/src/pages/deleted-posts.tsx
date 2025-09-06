@@ -44,17 +44,23 @@ export default function DeletedPosts() {
   const restorePostMutation = useMutation({
     mutationFn: async (postId: string) => {
       const response = await apiRequest('POST', `/api/deleted-posts/${postId}/restore`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to restore post');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
       toast({
-        title: 'Post restored',
-        description: 'Your job application has been restored successfully.',
+        title: 'Post restored successfully',
+        description: 'Your job application has been restored and moved back to My Applications.',
       });
     },
     onError: (error: any) => {
+      console.error('Restore post error:', error);
       toast({
         title: 'Restore failed',
         description: error.message || 'Failed to restore post',
