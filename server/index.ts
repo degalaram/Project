@@ -85,9 +85,22 @@ app.use((req, res, next) => {
       }
     }));
 
-    // Handle client-side routing
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    // Handle client-side routing - catch all non-API routes
+    app.get('*', (req, res, next) => {
+      // Skip API routes and static assets
+      if (req.path.startsWith('/api') || 
+          req.path.startsWith('/assets') || 
+          req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+        return next();
+      }
+      
+      // Serve index.html for all other routes (SPA routing)
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'), (err) => {
+        if (err) {
+          console.error('Error serving index.html:', err);
+          res.status(500).send('Internal Server Error');
+        }
+      });
     });
   }
 
