@@ -14,12 +14,22 @@ import path from 'path';
 import fs from 'fs';
 import { marked } from 'marked';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
+import { nanoid } from 'nanoid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Enable CORS for all origins during development. For production, configure specific origins.
+  app.use(cors({
+    origin: '*', // Allow all origins in development. Restrict in production.
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  }));
+
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -364,12 +374,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/courses", async (req, res) => {
     try {
-      const validatedData = insertCourseSchema.parse(req.body);
-      const course = await storage.createCourse(validatedData);
-      res.json(course);
+      const course = { 
+        id: nanoid(), 
+        ...req.body,
+        price: 'Free', // Ensure all courses are free
+        createdAt: new Date()
+      };
+      const validatedData = insertCourseSchema.parse(course);
+      const createdCourse = await storage.createCourse(validatedData);
+      res.json(createdCourse);
     } catch (error) {
       console.error("Error creating course:", error);
       res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  app.put("/api/courses/:id", async (req, res) => {
+    try {
+      const courseId = req.params.id;
+      const validatedData = insertCourseSchema.parse(req.body);
+      
+      // Ensure the course remains free when updated
+      validatedData.price = 'Free';
+
+      const updatedCourse = await storage.updateCourse(courseId, validatedData);
+
+      if (!updatedCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  app.delete("/api/courses/:id", async (req, res) => {
+    try {
+      const courseId = req.params.id;
+      const deleted = await storage.deleteCourse(courseId);
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
     }
   });
 
@@ -452,6 +505,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error deleting company with ID ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to delete company' });
+    }
+  });
+
+  // Company soft delete endpoint (move to deleted companies)
+  app.post('/api/companies/:id/soft-delete', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Soft deleting company with ID: ${id}`);
+
+      const deletedCompany = await storage.softDeleteCompany(id);
+
+      if (!deletedCompany) {
+        console.log(`Company not found: ${id}`);
+        return res.status(404).json({ message: 'Company not found' });
+      }
+
+      console.log(`Company moved to deleted companies: ${id}`);
+      res.json({ message: 'Company moved to deleted companies', deletedCompany });
+    } catch (error) {
+      console.error(`Error soft deleting company with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to move company to deleted companies' });
+    }
+  });
+
+  // Get deleted companies
+  app.get('/api/deleted-companies', async (req, res) => {
+    try {
+      const deletedCompanies = await storage.getDeletedCompanies();
+      res.json(deletedCompanies);
+    } catch (error) {
+      console.error('Error fetching deleted companies:', error);
+      res.status(500).json({ message: 'Failed to fetch deleted companies' });
+    }
+  });
+
+  // Restore deleted company
+  app.post('/api/deleted-companies/:id/restore', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Restoring deleted company with ID: ${id}`);
+
+      const restoredCompany = await storage.restoreDeletedCompany(id);
+
+      if (!restoredCompany) {
+        console.log(`Deleted company not found: ${id}`);
+        return res.status(404).json({ message: 'Deleted company not found' });
+      }
+
+      console.log(`Company restored successfully: ${id}`);
+      res.json({ message: 'Company restored successfully', company: restoredCompany });
+    } catch (error) {
+      console.error(`Error restoring company with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to restore company' });
+    }
+  });
+
+  // Update deleted company
+  app.put('/api/deleted-companies/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      console.log(`Updating deleted company with ID: ${id}`, updateData);
+
+      const updatedCompany = await storage.updateDeletedCompany(id, updateData);
+
+      if (!updatedCompany) {
+        console.log(`Deleted company not found: ${id}`);
+        return res.status(404).json({ message: 'Deleted company not found' });
+      }
+
+      console.log(`Deleted company updated successfully: ${id}`);
+      res.json({ message: 'Deleted company updated successfully', company: updatedCompany });
+    } catch (error) {
+      console.error(`Error updating deleted company with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to update deleted company' });
+    }
+  });
+
+  // Permanently delete company
+  app.delete('/api/deleted-companies/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Permanently deleting company with ID: ${id}`);
+
+      const deleted = await storage.permanentlyDeleteCompany(id);
+
+      if (!deleted) {
+        console.log(`Deleted company not found: ${id}`);
+        return res.status(404).json({ message: 'Deleted company not found' });
+      }
+
+      console.log(`Company permanently deleted: ${id}`);
+      res.json({ message: 'Company permanently deleted' });
+    } catch (error) {
+      console.error(`Error permanently deleting company with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to permanently delete company' });
     }
   });
 
@@ -665,7 +814,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint
   app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0',
+      uptime: process.uptime()
+    });
+  });
+
+  // Root API endpoint
+  app.get('/', (req, res) => {
+    res.json({ 
+      message: 'JobPortal API is running',
+      status: 'healthy',
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Presentation download routes
