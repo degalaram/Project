@@ -1,7 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Get API base URL from environment variable or use relative path for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD ? 'https://your-render-backend.onrender.com' : 'http://localhost:5000');
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -17,12 +18,12 @@ export async function apiRequest(
 ): Promise<Response> {
   // Prepend API base URL if it's set and URL is relative
   const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
-  
+
   // Log API calls in development for debugging
   if (import.meta.env.DEV) {
     console.log(`API ${method} ${fullUrl}`);
   }
-  
+
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -43,12 +44,12 @@ export const getQueryFn: <T>(options: {
     // Prepend API base URL if it's set and URL is relative
     const url = queryKey.join("/") as string;
     const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
-    
+
     // Log API calls in development for debugging
     if (import.meta.env.DEV) {
       console.log(`API GET ${fullUrl}`);
     }
-    
+
     const res = await fetch(fullUrl, {
       credentials: "include",
     });
