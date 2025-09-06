@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Navbar } from '@/components/job-portal/navbar';
 import { Footer } from '@/components/job-portal/footer';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   BookOpen, 
   Users, 
@@ -25,9 +31,444 @@ import {
   Bug,
   Shield,
   Settings,
-  Building
+  Building,
+  Plus,
+  Save,
+  Trash2,
+  Edit
 } from 'lucide-react';
 import type { Course } from '@shared/schema';
+
+// Edit Course Dialog Component
+function EditCourseDialog({ course, children }: { course: any; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: course.title,
+    description: course.description,
+    instructor: course.instructor || '',
+    duration: course.duration || '',
+    level: course.level || 'beginner',
+    category: course.category,
+    courseUrl: course.courseUrl || '',
+    price: 'Free'
+  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Reset form data when dialog opens or course changes
+  useEffect(() => {
+    setFormData({
+      title: course.title,
+      description: course.description,
+      instructor: course.instructor || '',
+      duration: course.duration || '',
+      level: course.level || 'beginner',
+      category: course.category,
+      courseUrl: course.courseUrl || '',
+      price: 'Free'
+    });
+  }, [course, open]);
+
+  const updateCourseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', `/api/courses/${course.id}`, data);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update course: ${errorText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Course updated successfully',
+        description: 'The course details have been updated.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      setOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to update course',
+        description: error.message || 'An error occurred while updating the course.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim() || !formData.courseUrl.trim()) {
+      toast({
+        title: 'Please fill required fields',
+        description: 'Course title and URL are required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    updateCourseMutation.mutate(formData);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md w-[95vw] max-w-[95vw] max-h-[90vh] overflow-y-auto mx-2">
+        <DialogHeader>
+          <DialogTitle>Edit Course</DialogTitle>
+          <DialogDescription>
+            Update the course details.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-course-title">Course Title *</Label>
+            <Input
+              id="edit-course-title"
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Enter course title"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-course-description">Description</Label>
+            <Textarea
+              id="edit-course-description"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Course description"
+              className="min-h-20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-course-instructor">Instructor</Label>
+              <Input
+                id="edit-course-instructor"
+                value={formData.instructor}
+                onChange={(e) => handleChange('instructor', e.target.value)}
+                placeholder="Instructor name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-course-duration">Duration</Label>
+              <Input
+                id="edit-course-duration"
+                value={formData.duration}
+                onChange={(e) => handleChange('duration', e.target.value)}
+                placeholder="e.g., 8 weeks"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-course-level">Level</Label>
+              <Select value={formData.level} onValueChange={(value) => handleChange('level', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-course-category">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="frontend">Frontend</SelectItem>
+                  <SelectItem value="backend">Backend</SelectItem>
+                  <SelectItem value="testing">Testing</SelectItem>
+                  <SelectItem value="cyber-security">Cyber Security</SelectItem>
+                  <SelectItem value="devops">DevOps</SelectItem>
+                  <SelectItem value="sap">SAP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-course-url">Course URL *</Label>
+            <Input
+              id="edit-course-url"
+              value={formData.courseUrl}
+              onChange={(e) => handleChange('courseUrl', e.target.value)}
+              placeholder="https://example.com/course"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="w-full sm:w-auto order-2 sm:order-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateCourseMutation.isPending}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
+              {updateCourseMutation.isPending ? 'Updating...' : 'Update Course'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Add Course Form Component
+function AddCourseDialog({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    instructor: '',
+    duration: '',
+    level: 'beginner',
+    category: 'frontend',
+    courseUrl: '',
+    price: 'Free'
+  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Delete course mutation
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      const response = await apiRequest('DELETE', `/api/courses/${courseId}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete course: ${errorText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Course deleted successfully',
+        description: 'The course has been removed from the catalog.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to delete course',
+        description: error.message || 'An error occurred while deleting the course.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const createCourseMutation = useMutation({
+    mutationFn: async (courseData: any) => {
+      const response = await apiRequest('POST', '/api/courses', courseData);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create course: ${errorText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Course created successfully',
+        description: 'The new course has been added to the catalog.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      setOpen(false);
+      setFormData({
+        title: '',
+        description: '',
+        instructor: '',
+        duration: '',
+        level: 'beginner',
+        category: 'frontend',
+        courseUrl: '',
+        price: 'Free'
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to create course',
+        description: error.message || 'An error occurred while creating the course.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim() || !formData.courseUrl.trim()) {
+      toast({
+        title: 'Please fill required fields',
+        description: 'Course title and URL are required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    createCourseMutation.mutate(formData);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md w-[95vw] max-w-[95vw] max-h-[90vh] overflow-y-auto mx-2">
+        <DialogHeader>
+          <DialogTitle>Add New Course</DialogTitle>
+          <DialogDescription>
+            Create a new course to add to the catalog.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="course-title">Course Title *</Label>
+            <Input
+              id="course-title"
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Enter course title"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="course-description">Description</Label>
+            <Textarea
+              id="course-description"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Course description"
+              className="min-h-20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="course-instructor">Instructor</Label>
+              <Input
+                id="course-instructor"
+                value={formData.instructor}
+                onChange={(e) => handleChange('instructor', e.target.value)}
+                placeholder="Instructor name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="course-duration">Duration</Label>
+              <Input
+                id="course-duration"
+                value={formData.duration}
+                onChange={(e) => handleChange('duration', e.target.value)}
+                placeholder="e.g., 8 weeks"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="course-level">Level</Label>
+              <Select value={formData.level} onValueChange={(value) => handleChange('level', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="course-category">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="frontend">Frontend</SelectItem>
+                  <SelectItem value="backend">Backend</SelectItem>
+                  <SelectItem value="testing">Testing</SelectItem>
+                  <SelectItem value="cyber-security">Cyber Security</SelectItem>
+                  <SelectItem value="devops">DevOps</SelectItem>
+                  <SelectItem value="sap">SAP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="course-url">Course URL *</Label>
+            <Input
+              id="course-url"
+              value={formData.courseUrl}
+              onChange={(e) => handleChange('courseUrl', e.target.value)}
+              placeholder="https://example.com/course"
+              required
+            />
+          </div>
+
+          <input type="hidden" name="price" value="Free" />
+
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="w-full sm:w-auto order-2 sm:order-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createCourseMutation.isPending}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
+              {createCourseMutation.isPending ? (
+                'Creating...'
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Create Course
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Courses() {
   const [, navigate] = useLocation();
@@ -42,7 +483,7 @@ export default function Courses() {
     }
   }, [navigate]);
 
-  const { data: courses = [], isLoading } = useQuery({
+  const { data: dbCourses = [], isLoading } = useQuery({
     queryKey: ['/api/courses'],
   });
 
@@ -93,7 +534,10 @@ export default function Courses() {
     { id: 'sap-abap', title: 'SAP ABAP Programming', description: 'Learn SAP ABAP programming language for custom development and business logic implementation.', instructor: 'Great Learning', duration: '12 weeks', level: 'intermediate', category: 'sap', courseUrl: 'https://www.mygreatlearning.com/blog/sap-abap/', price: 'Free', createdAt: new Date().toISOString() }
   ];
 
-  const filteredCourses = freeCourses.filter((course) => {
+  // Combine database courses with static free courses
+  const allCourses = [...dbCourses, ...freeCourses];
+
+  const filteredCourses = allCourses.filter((course) => {
     const matchesSearch = searchTerm === '' || 
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,8 +549,13 @@ export default function Courses() {
   });
 
   const handleCourseClick = (course: any) => {
-    // Use wouter navigation for proper SPA routing
-    navigate(`/courses/${course.id}`);
+    // If course has a courseUrl, open it directly
+    if (course.courseUrl) {
+      window.open(course.courseUrl, '_blank');
+    } else {
+      // Fallback to course details page
+      navigate(`/courses/${course.id}`);
+    }
   };
 
   const getLevelColor = (level: string) => {
@@ -120,30 +569,30 @@ export default function Courses() {
 
   const getCourseImage = (courseId: string) => {
     const imageMap: Record<string, string> = {
-      'html-css': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop',
-      'javascript': 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=300&fit=crop',
-      'react': 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop',
-      'angular': 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop',
-      'vue': 'https://images.unsplash.com/photo-1588508065123-287b28e013da?w=400&h=300&fit=crop',
-      'python': 'https://images.unsplash.com/photo-1526379879527-8559ecfcaec0?w=400&h=300&fit=crop',
-      'java': 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=400&h=300&fit=crop',
-      'sql': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=400&h=300&fit=crop',
-      'nodejs': 'https://images.unsplash.com/photo-1619410283995-43d9134e7656?w=400&h=300&fit=crop',
-      'django': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop',
-      'golang': 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=400&h=300&fit=crop',
-      'selenium': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
-      'jest': 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=300&fit=crop',
-      'cypress': 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=300&fit=crop',
-      'ethical-hacking': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=300&fit=crop',
-      'network-security': 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop',
-      'docker': 'https://images.unsplash.com/photo-1605745341112-85968b19335a?w=400&h=300&fit=crop',
-      'kubernetes': 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=400&h=300&fit=crop',
-      'aws': 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=400&h=300&fit=crop',
-      'jenkins': 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
-      'sap-basics': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
-      'sap-abap': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop'
+      'html-css': 'https://images.unsplash.com/photo-1621839673705-6617adf9e890?w=400&h=300&fit=crop', // HTML/CSS code
+      'javascript': 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=300&fit=crop', // JavaScript code
+      'react': 'https://images.unsplash.com/photo-1633356122544-f13432a6cee?w=400&h=300&fit=crop', // React development
+      'angular': 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop', // Angular development
+      'vue': 'https://images.unsplash.com/photo-1588508065123-287b28183da?w=400&h=300&fit=crop', // Vue development
+      'python': 'https://images.unsplash.com/photo-1549692520-acc6669e2f0c?w=400&h=300&fit=crop', // Python code
+      'java': 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=400&h=300&fit=crop', // Java development
+      'sql': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=400&h=300&fit=crop', // Database/SQL
+      'nodejs': 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=400&h=300&fit=crop', // Node.js development
+      'django': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop', // Django development
+      'golang': 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=400&h=300&fit=crop', // Go development
+      'selenium': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop', // Testing/automation
+      'jest': 'https://images.unsplash.com/photo-1611224923853-80b018f02d71?w=400&h=300&fit=crop', // JavaScript testing
+      'cypress': 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=300&fit=crop', // End-to-end testing
+      'ethical-hacking': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=300&fit=crop', // Cybersecurity
+      'network-security': 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop', // Network security
+      'docker': 'https://images.unsplash.com/photo-1605745341112-85968b19335a?w=400&h=300&fit=crop', // Containerization
+      'kubernetes': 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=400&h=300&fit=crop', // Container orchestration
+      'aws': 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=400&h=300&fit=crop', // Cloud computing
+      'jenkins': 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop', // CI/CD
+      'sap-basics': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop', // Enterprise software
+      'sap-abap': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop' // SAP development
     };
-    
+
     return imageMap[courseId] || 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop';
   };
 
@@ -168,7 +617,18 @@ export default function Courses() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Learn New Skills</h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Learn New Skills</h1>
+            <AddCourseDialog>
+              <Button 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 h-10 w-10"
+                data-testid="add-course-button"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </AddCourseDialog>
+          </div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Enhance your career prospects with our curated collection of courses. 
             From programming fundamentals to advanced technologies.
@@ -290,30 +750,196 @@ export default function Courses() {
                       </div>
                     )}
 
-                    {/* Skills Preview */}
-                    <div className="flex flex-wrap gap-1 mb-1 sm:mb-2">
+                    {/* Skills Preview with Technology Icons */}
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                       {course.id === 'html-css' && (
                         <>
-                          <span className="text-xs bg-orange-100 text-orange-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">🌐 <span className="hidden sm:inline">HTML5</span></span>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">🎨 <span className="hidden sm:inline">CSS3</span></span>
+                          <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML5" className="w-4 h-4" />
+                            <span className="text-xs text-orange-700 font-medium hidden sm:inline">HTML5</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" alt="CSS3" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">CSS3</span>
+                          </div>
                         </>
                       )}
                       {course.id === 'javascript' && (
                         <>
-                          <span className="text-xs bg-yellow-100 text-yellow-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">⚡ <span className="hidden sm:inline">JavaScript</span></span>
-                          <span className="text-xs bg-green-100 text-green-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">🔧 <span className="hidden sm:inline">ES6+</span></span>
+                          <div className="flex items-center gap-1 bg-yellow-50 border border-yellow-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="JavaScript" className="w-4 h-4" />
+                            <span className="text-xs text-yellow-700 font-medium hidden sm:inline">JavaScript</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-green-700 font-medium">ES6+</span>
+                          </div>
                         </>
                       )}
                       {course.id === 'react' && (
                         <>
-                          <span className="text-xs bg-cyan-100 text-cyan-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">⚛️ <span className="hidden sm:inline">React</span></span>
-                          <span className="text-xs bg-purple-100 text-purple-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">🪝 <span className="hidden sm:inline">Hooks</span></span>
+                          <div className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React" className="w-4 h-4" />
+                            <span className="text-xs text-cyan-700 font-medium hidden sm:inline">React</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-purple-50 border border-purple-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-purple-700 font-medium">Hooks</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'angular' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angularjs/angularjs-original.svg" alt="Angular" className="w-4 h-4" />
+                            <span className="text-xs text-red-700 font-medium hidden sm:inline">Angular</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" alt="TypeScript" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">TypeScript</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'vue' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vuejs/vuejs-original.svg" alt="Vue.js" className="w-4 h-4" />
+                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Vue.js</span>
+                          </div>
                         </>
                       )}
                       {course.id === 'python' && (
                         <>
-                          <span className="text-xs bg-green-100 text-green-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">🐍 <span className="hidden sm:inline">Python</span></span>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-1 sm:px-2 py-1 rounded flex items-center gap-1">📊 <span className="hidden sm:inline">Data</span></span>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Python</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'java' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" alt="Java" className="w-4 h-4" />
+                            <span className="text-xs text-orange-700 font-medium hidden sm:inline">Java</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'sql' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" alt="SQL" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">SQL</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'nodejs' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" alt="Node.js" className="w-4 h-4" />
+                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Node.js</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg" alt="Express" className="w-4 h-4" />
+                            <span className="text-xs text-gray-700 font-medium hidden sm:inline">Express</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'django' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/django/django-plain.svg" alt="Django" className="w-4 h-4" />
+                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Django</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'golang' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/go/go-original.svg" alt="Go" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Go</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'selenium' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/selenium/selenium-original.svg" alt="Selenium" className="w-4 h-4" />
+                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Selenium</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'jest' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jest/jest-plain.svg" alt="Jest" className="w-4 h-4" />
+                            <span className="text-xs text-red-700 font-medium hidden sm:inline">Jest</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'cypress' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md">
+                            <span className="w-4 h-4 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold">C</span>
+                            <span className="text-xs text-gray-700 font-medium hidden sm:inline">Cypress</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'ethical-hacking' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-red-700 font-medium">🛡️ Security</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'network-security' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-blue-700 font-medium">🔒 Network</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'docker' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" alt="Docker" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Docker</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'kubernetes' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kubernetes/kubernetes-plain.svg" alt="Kubernetes" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Kubernetes</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'aws' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS" className="w-4 h-4" />
+                            <span className="text-xs text-orange-700 font-medium hidden sm:inline">AWS</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'jenkins' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jenkins/jenkins-original.svg" alt="Jenkins" className="w-4 h-4" />
+                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Jenkins</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'sap-basics' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-blue-700 font-medium">🏢 SAP</span>
+                          </div>
+                        </>
+                      )}
+                      {course.id === 'sap-abap' && (
+                        <>
+                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
+                            <span className="text-xs text-blue-700 font-medium">📊 ABAP</span>
+                          </div>
                         </>
                       )}
                     </div>
@@ -334,21 +960,66 @@ export default function Courses() {
                     {/* Price and Action */}
                     <div className="flex items-center justify-between pt-2 sm:pt-4">
                       <div className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
-                        {course.price}
+                        Free
                       </div>
-                      <Button 
-                        size="sm"
-                        className="text-xs sm:text-sm px-2 sm:px-4"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/courses/${course.id}`);
-                        }}
-                        data-testid={`enroll-course-${course.id}`}
-                      >
-                        <span className="hidden sm:inline">View Course</span>
-                        <span className="sm:hidden">View</span>
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm"
+                          className="text-xs sm:text-sm px-2 sm:px-4"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (course.courseUrl) {
+                              window.open(course.courseUrl, '_blank');
+                            } else {
+                              navigate(`/courses/${course.id}`);
+                            }
+                          }}
+                          data-testid={`enroll-course-${course.id}`}
+                        >
+                          <span className="hidden sm:inline">
+                            {course.courseUrl ? 'Start Course' : 'View Course'}
+                          </span>
+                          <span className="sm:hidden">
+                            {course.courseUrl ? 'Start' : 'View'}
+                          </span>
+                          {course.courseUrl ? (
+                            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                          )}
+                        </Button>
+                        {/* Only show edit and delete buttons for database courses, not static free courses */}
+                        {!freeCourses.find(fc => fc.id === course.id) && (
+                          <>
+                            <EditCourseDialog course={course}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="p-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={(e) => e.stopPropagation()}
+                                data-testid={`edit-course-${course.id}`}
+                              >
+                                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            </EditCourseDialog>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="p-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                                  deleteCourseMutation.mutate(course.id);
+                                }
+                              }}
+                              disabled={deleteCourseMutation.isPending}
+                              data-testid={`delete-course-${course.id}`}
+                            >
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
