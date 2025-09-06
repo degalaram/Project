@@ -16,6 +16,7 @@ import Contact from "@/pages/contact";
 import Profile from "@/pages/profile";
 import MyApplications from "@/pages/my-applications";
 import DeletedPosts from "@/pages/deleted-posts";
+import DeletedCompanies from "@/pages/deleted-companies";
 import NotFound from "@/pages/not-found";
 
 // SECURITY CHECK: Verify core components exist and are not tampered with
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/my-applications" component={MyApplications} />
       <Route path="/deleted-posts" component={DeletedPosts} />
+      <Route path="/deleted-companies" component={DeletedCompanies} />
       <Route component={NotFound} />
     </Switch>
   );
