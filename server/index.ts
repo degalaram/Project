@@ -2,11 +2,15 @@ import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from 'path'; // Import path module
 
 const app = express();
 
-// CORS configuration - CRITICAL for frontend/backend communication
-const corsOptions = {
+// Trust proxy for production deployments
+app.set('trust proxy', 1);
+
+// CORS configuration for Netlify frontend
+app.use(cors({
   origin: process.env.FRONTEND_URL || [
     'http://localhost:3000',
     'http://localhost:5173',
@@ -18,9 +22,8 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-};
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -71,7 +74,21 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve static files in production with proper headers
+    app.use(express.static(path.join(__dirname, '../client/dist'), {
+      maxAge: '1d',
+      etag: false,
+      setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      }
+    }));
+
+    // Handle client-side routing
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
@@ -80,13 +97,27 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
 
 
-  
+
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+
+  console.log('🔧 Environment:', process.env.NODE_ENV);
+
+  // Database URL logging
+  if (process.env.DATABASE_URL) {
+    console.log('✅ Database URL configured');
+  } else {
+    console.log('❌ DATABASE_URL not found in environment variables');
+  }
+
+  // Production checks
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚀 Production mode enabled');
+    console.log('📁 Static files path:', path.join(__dirname, '../client/dist'));
+  } else {
+    console.log('🛠️ Development mode enabled');
+  }
+
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${port}`);
   });
 })();
