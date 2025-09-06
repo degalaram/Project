@@ -233,6 +233,10 @@ export default function Jobs() {
 
   const deleteJobMutation = useMutation({
     mutationFn: async (jobId: string) => {
+      if (!user.id) {
+        throw new Error('User not logged in');
+      }
+      
       // First create an application for this job so it can be tracked in deleted posts
       try {
         await apiRequest('POST', '/api/applications', {
@@ -241,12 +245,19 @@ export default function Jobs() {
         });
       } catch (error) {
         // Application might already exist, continue with deletion
+        console.log('Application might already exist, continuing with deletion');
       }
       
       // Then soft delete the job with user context
       const response = await apiRequest('DELETE', `/api/jobs/${jobId}`, {
         userId: user.id
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete job');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -254,11 +265,12 @@ export default function Jobs() {
       queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
       toast({
-        title: 'Job deleted',
+        title: 'Job deleted successfully',
         description: 'The job has been moved to deleted posts and can be restored within 5 days.',
       });
     },
     onError: (error: any) => {
+      console.error('Delete job error:', error);
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete job',
