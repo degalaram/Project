@@ -63,12 +63,12 @@ function EditDeletedCompanyDialog({ company, children }: { company: DeletedCompa
     mutationFn: async (data: InsertCompany) => {
       const response = await apiRequest('PUT', `/api/deleted-companies/${company.id}`, data);
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update company: ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update company');
       }
       return response.json();
     },
-    onSuccess: (updatedCompany) => {
+    onSuccess: (result) => {
       toast({
         title: 'Company updated successfully',
         description: 'The deleted company details have been updated.',
