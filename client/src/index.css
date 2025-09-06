@@ -112,6 +112,10 @@
   --text-blue: hsl(200 100% 70%);
   --text-purple: hsl(0 0% 100%);
   --text-black: hsl(0 0% 100%);
+
+  /* Dark mode mobile icon backgrounds */
+  --mobile-icon-bg: hsl(217.2 32.6% 17.5%);
+  --mobile-card-bg: hsl(222.2 84% 4.9%);
 }
 
 @layer base {
@@ -313,54 +317,64 @@
 
 /* Enhanced responsive design for all devices */
 
+/* Global responsive fixes */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 /* Mobile First - Extra Small devices (phones, 320px and up) */
 @media (max-width: 480px) {
   .container {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    max-width: 100%;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    max-width: 100% !important;
   }
 
   .grid-responsive {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
   }
 
   .text-responsive {
-    font-size: 0.8rem;
-    line-height: 1.4;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
   }
 
   .navbar-mobile {
-    padding: 0.5rem 0.75rem;
-    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem !important;
+    flex-wrap: wrap !important;
   }
 
   .card-mobile {
-    margin: 0 0.25rem;
-    padding: 0.75rem;
+    margin: 0 0.25rem !important;
+    padding: 0.75rem !important;
   }
 
   /* Button adjustments for mobile */
   .btn-mobile {
-    padding: 0.6rem 1rem;
-    font-size: 0.875rem;
-    width: 100%;
-    margin-bottom: 0.5rem;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.875rem !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
   }
 
   /* Form inputs for mobile */
   .input-mobile {
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 16px; /* Prevents zoom on iOS */
+    width: 100% !important;
+    padding: 0.75rem !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
   }
 
   /* Typography adjustments */
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
-  h4 { font-size: 1.125rem; }
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.5rem !important; }
+  h3 { font-size: 1.25rem !important; }
+  h4 { font-size: 1.125rem !important; }
 
   /* Hide unnecessary elements on small screens */
   .hide-mobile {
@@ -375,6 +389,18 @@
   /* Full width on mobile */
   .full-width-mobile {
     width: 100% !important;
+  }
+
+  /* Ensure proper spacing for course cards */
+  .course-card {
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Fix course grid for mobile */
+  .courses-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
   }
 }
 
@@ -773,14 +799,36 @@ footer {
     margin: 0.25rem 0;
   }
 
-  /* Responsive cards */
+  /* Responsive cards - proper theme-based backgrounds */
   .card {
     margin: 0.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  /* Job card mobile optimizations - 2 Row Layout */
+  /* Light theme card styling */
+  .card {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Dark theme card styling */
+  .dark .card {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  /* Job card mobile optimizations - proper theme-based styling */
+  [data-testid*="job-card-"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .dark [data-testid*="job-card-"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+
   [data-testid*="job-card-"] .flex.items-start.justify-between {
     align-items: flex-start !important;
   }
@@ -803,15 +851,28 @@ footer {
     margin-bottom: 0.5rem !important;
   }
 
+  .dark [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 {
+    border: 1px solid #333333 !important;
+    background-color: #1a1a1a !important;
+  }
+
   /* Social media icon styling for mobile - make them more prominent */
   [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 button {
     padding: 0.5rem !important;
     min-width: 2.5rem !important;
     min-height: 2.5rem !important;
     border-radius: 0.375rem !important;
-    border: 1px solid #d1d5db !important;
-    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .dark [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 button {
+    border: 1px solid #333333 !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
   }
 
   [data-testid*="job-card-"] .pt-3.border-t .flex.items-center.space-x-1 button svg {
@@ -829,6 +890,11 @@ footer {
     border-radius: 0.5rem !important;
     background-color: #f9fafb !important;
     flex: none !important;
+  }
+
+  .dark [data-testid*="job-card-"] .pt-3.border-t .flex.flex-wrap.items-center.justify-end {
+    border: 1px solid #333333 !important;
+    background-color: #1a1a1a !important;
   }
 
   /* Company logo containers - normalize sizes */
@@ -884,13 +950,33 @@ footer {
     flex-shrink: 0 !important;
   }
 
-  /* View Details button - consistent sizing */
+  /* View Details button - consistent sizing with dark green background */
   [data-testid*="view-details-"] {
     height: 2rem !important;
     padding: 0.5rem 0.5rem !important;
     font-size: 0.75rem !important;
     min-width: 3.5rem !important;
     flex-shrink: 0 !important;
+    background-color: #166534 !important; /* Dark green */
+    color: #ffffff !important; /* White text */
+    border: 1px solid #166534 !important;
+  }
+
+  [data-testid*="view-details-"]:hover {
+    background-color: #14532d !important; /* Darker green on hover */
+    border: 1px solid #14532d !important;
+  }
+
+  /* Ensure dark green in both themes */
+  .dark [data-testid*="view-details-"] {
+    background-color: #166534 !important;
+    color: #ffffff !important;
+    border: 1px solid #166534 !important;
+  }
+
+  .dark [data-testid*="view-details-"]:hover {
+    background-color: #14532d !important;
+    border: 1px solid #14532d !important;
   }
 
   /* Delete button - consistent sizing */
