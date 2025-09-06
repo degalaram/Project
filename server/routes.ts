@@ -224,9 +224,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.body; // Get userId from request body
 
       // Check if job exists
-      const job = await storage.getJob(jobId);
+      const job = await storage.getJobById(jobId);
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // First, ensure there's an application for this job by this user
+      try {
+        await storage.createApplication({
+          userId: userId,
+          jobId: jobId,
+          status: null,
+          appliedAt: new Date(),
+        });
+      } catch (error) {
+        // Application might already exist, continue with deletion
+        console.log('Application might already exist for user', userId, 'and job', jobId);
       }
 
       // Create deleted post entry for the job with user context
@@ -823,8 +836,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Root API endpoint
-  app.get('/', (req, res) => {
+  // Root API endpoint moved to /api to avoid interfering with frontend
+  app.get('/api', (req, res) => {
     res.json({ 
       message: 'JobPortal API is running',
       status: 'healthy',
