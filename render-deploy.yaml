@@ -1,0 +1,25 @@
+
+services:
+  - type: web
+    name: jobportal-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: |
+      echo "Installing dependencies..."
+      npm ci --only=production --no-audit --no-fund
+      echo "Build completed successfully"
+    startCommand: node server/render-production.js
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://your-netlify-app.netlify.app
+    disk:
+      name: jobportal-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1
