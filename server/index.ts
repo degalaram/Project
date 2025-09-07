@@ -25,6 +25,7 @@ const corsOptions = {
       /\.vercel\.app$/,
       /\.onrender\.com$/,
       /localhost:\d+$/,
+      /127\.0\.0\.1:\d+$/,
       /\.replit\.dev$/,
       /\.repl\.co$/,
       /\.replit\.app$/
