@@ -6,8 +6,10 @@ const getApiBaseUrl = () => {
   // In development, check if running in Replit
   if (import.meta.env.DEV) {
     // Use current hostname with port 5000 for Replit development
-    if (window.location.hostname.includes('replit.dev') || window.location.hostname.includes('repl.co')) {
-      return `${window.location.protocol}//${window.location.hostname.replace(/^\w+-/, '')}`; // Remove port prefix for Replit URLs
+    if (window.location.hostname.includes('replit.dev') || 
+        window.location.hostname.includes('repl.co') || 
+        window.location.hostname.includes('replit.app')) {
+      return `${window.location.protocol}//${window.location.hostname}`;
     }
     return "http://localhost:5000";
   }
