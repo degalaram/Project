@@ -7,6 +7,24 @@ import {
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
+// Drizzle imports for database operations
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { eq, gt, like, or, and, isNull, desc } from "drizzle-orm";
+import { deletedPostsTable, jobsTable, companiesTable } from "@shared/schema";
+import * as schema from "@shared/schema";
+import { nanoid } from 'nanoid'; // For generating unique IDs
+
+// Placeholder for DeletedPost type if not already defined in schema
+// In a real scenario, this would be imported from @shared/schema
+type DeletedPost = {
+  id: string;
+  userId: string;
+  jobId: string | null;
+  applicationId: string | null;
+  deletedAt: Date;
+};
+
 export interface IStorage {
   // Auth
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -38,6 +56,7 @@ export interface IStorage {
   // Jobs
   getJobs(filters?: { experienceLevel?: string; location?: string; search?: string; userId?: string }): Promise<(Job & { company: Company })[]>;
   getJob(id: string): Promise<(Job & { company: Company }) | undefined>;
+  getJobById(id: string): Promise<Job | undefined>; // Added getJobById method
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
   deleteJob(jobId: string): Promise<void>; // Added deleteJob to the interface
@@ -440,7 +459,7 @@ export class MemStorage implements IStorage {
         duration: "6 weeks",
         level: "beginner",
         category: "web-development",
-        imageUrl: "/images/html_css_course.png",
+        imageUrl: "@assets/generated_images/HTML_CSS_Course_Thumbnail_b8010eb5.png",
         courseUrl: "https://developer.mozilla.org/en-US/docs/Web/HTML",
         price: "Free",
         createdAt: new Date(),
@@ -453,7 +472,7 @@ export class MemStorage implements IStorage {
         duration: "8 weeks",
         level: "beginner",
         category: "programming",
-        imageUrl: "/images/python_course.png",
+        imageUrl: "@assets/generated_images/Python_Programming_Course_Thumbnail_f8ac5b59.png",
         courseUrl: "https://www.python.org/about/gettingstarted/",
         price: "Free",
         createdAt: new Date(),
@@ -466,7 +485,7 @@ export class MemStorage implements IStorage {
         duration: "10 weeks",
         level: "intermediate",
         category: "web-development",
-        imageUrl: "/images/javascript_course.png",
+        imageUrl: "@assets/generated_images/JavaScript_Course_Thumbnail_a77ba012.png",
         courseUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
         price: "Free",
         createdAt: new Date(),
@@ -479,7 +498,7 @@ export class MemStorage implements IStorage {
         duration: "12 weeks",
         level: "intermediate",
         category: "web-development",
-        imageUrl: "/images/react_course.png",
+        imageUrl: "@assets/generated_images/React_Development_Course_Thumbnail_c80e7bc1.png",
         courseUrl: "https://react.dev/learn",
         price: "Free",
         createdAt: new Date(),
@@ -492,7 +511,7 @@ export class MemStorage implements IStorage {
         duration: "10 weeks",
         level: "intermediate",
         category: "backend",
-        imageUrl: "/images/nodejs_course.png",
+        imageUrl: "@assets/generated_images/Node.js_Backend_Course_Thumbnail_db981e96.png",
         courseUrl: "https://nodejs.org/en/docs/",
         price: "Free",
         createdAt: new Date(),
@@ -505,7 +524,7 @@ export class MemStorage implements IStorage {
         duration: "14 weeks",
         level: "intermediate",
         category: "programming",
-        imageUrl: "/images/dsa_course.png",
+        imageUrl: "@assets/generated_images/Data_Structures_Algorithms_Course_461adfa0.png",
         courseUrl: "https://www.geeksforgeeks.org/data-structures/",
         price: "Free",
         createdAt: new Date(),
@@ -518,7 +537,7 @@ export class MemStorage implements IStorage {
         duration: "16 weeks",
         level: "advanced",
         category: "data-science",
-        imageUrl: "/images/ml_course.png",
+        imageUrl: "@assets/generated_images/Machine_Learning_Course_Thumbnail_b1f0cf55.png",
         courseUrl: "https://www.tensorflow.org/learn/ml-basics",
         price: "Free",
         createdAt: new Date(),
@@ -531,7 +550,7 @@ export class MemStorage implements IStorage {
         duration: "12 weeks",
         level: "intermediate",
         category: "cybersecurity",
-        imageUrl: "/images/cybersecurity_course.png",
+        imageUrl: "@assets/generated_images/Cybersecurity_Course_Thumbnail_86bee863.png",
         courseUrl: "https://www.cybrary.it/courses/cybersecurity-fundamentals/",
         price: "Free",
         createdAt: new Date(),
@@ -544,7 +563,7 @@ export class MemStorage implements IStorage {
         duration: "8 weeks",
         level: "beginner",
         category: "database",
-        imageUrl: "/images/database_course.png",
+        imageUrl: "@assets/generated_images/Database_Management_Course_Thumbnail_6869d94b.png",
         courseUrl: "https://www.khanacademy.org/computing/computer-programming/sql",
         price: "Free",
         createdAt: new Date(),
@@ -557,7 +576,7 @@ export class MemStorage implements IStorage {
         duration: "10 weeks",
         level: "intermediate",
         category: "cloud",
-        imageUrl: "/images/cloud_computing_course.png",
+        imageUrl: "@assets/generated_images/Cloud_Computing_Course_Thumbnail_675f1cf7.png",
         courseUrl: "https://aws.amazon.com/training/cloud-essentials/",
         price: "Free",
         createdAt: new Date(),
@@ -570,7 +589,7 @@ export class MemStorage implements IStorage {
         duration: "12 weeks",
         level: "intermediate",
         category: "devops",
-        imageUrl: "/images/devops_course.png",
+        imageUrl: "@assets/generated_images/DevOps_Course_Thumbnail_2017a272.png",
         courseUrl: "https://azure.microsoft.com/en-us/services/devops/",
         price: "Free",
         createdAt: new Date(),
@@ -757,6 +776,10 @@ export class MemStorage implements IStorage {
 
     const company = this.companies.get(job.companyId)!;
     return { ...job, company };
+  }
+
+  async getJobById(id: string): Promise<Job | undefined> {
+    return this.jobs.get(id);
   }
 
   async createJob(insertJob: InsertJob): Promise<Job> {
@@ -1074,9 +1097,13 @@ export class MemStorage implements IStorage {
   }
 
   // Deleted Posts methods
-  async addDeletedPost(post: any): Promise<void> {
-    const id = randomUUID();
-    this.deletedPosts.set(id, { ...post, id, deletedAt: new Date() });
+  async addDeletedPost(deletedPost: any): Promise<any> {
+    if (!this.deletedPosts) {
+      this.deletedPosts = new Map<string, any>();
+    }
+    this.deletedPosts.set(deletedPost.id, deletedPost);
+    console.log(`Added deleted post: ${deletedPost.id} for user: ${deletedPost.userId}`);
+    return deletedPost;
   }
 
   async getUserDeletedPosts(userId: string): Promise<any[]> {
@@ -1086,22 +1113,35 @@ export class MemStorage implements IStorage {
     }
     const userDeletedPosts = Array.from(this.deletedPosts.values()).filter(post => post.userId === userId);
     console.log(`Storage: Found ${userDeletedPosts.length} deleted posts for user ${userId}`);
-    return userDeletedPosts;
+
+    // Ensure each deleted post has complete job data with company information
+    const enrichedDeletedPosts = userDeletedPosts.map(post => {
+      if (post.job && !post.job.company) {
+        // Get company data for the job
+        const company = this.companies.get(post.job.companyId);
+        if (company) {
+          post.job.company = company;
+        }
+      }
+      return post;
+    });
+
+    return enrichedDeletedPosts;
   }
 
   async softDeleteJob(jobId: string, userId: string): Promise<any> {
-    const job = await this.getJobById(jobId);
-    if (!job) {
+    const jobWithCompany = await this.getJob(jobId);
+    if (!jobWithCompany) {
       throw new Error('Job not found');
     }
 
-    // Create deleted post entry
+    // Create deleted post entry with complete job and company data
     const deletedPost = {
       id: randomUUID(),
       userId: userId,
       jobId: jobId,
       applicationId: null, // Will be filled when application is created
-      job: job,
+      job: jobWithCompany, // This includes company data
       deletedAt: new Date(),
     };
 
@@ -1183,10 +1223,13 @@ export class MemStorage implements IStorage {
 
   }
 
-// Import database connection
-import { db } from "./db.js";
-import * as schema from "@shared/schema";
-import { eq, gt, like, or, and, isNull } from "drizzle-orm"; // Added missing imports
+// Database connection setup (assuming a db.ts file or similar)
+// If DATABASE_URL is not set, use an in-memory database for development/testing
+const connection = process.env.DATABASE_URL
+  ? postgres(process.env.DATABASE_URL)
+  : postgres("postgresql://user:password@host:port/database", { prepare: false }); // Placeholder for local development if no URL
+
+const db = drizzle(connection, { schema }); // Assuming schema is correctly imported and defined
 
 // Database storage implementation using Drizzle ORM
 export class DbStorage implements IStorage {
@@ -1268,51 +1311,36 @@ export class DbStorage implements IStorage {
 
   // Job methods
   async getJobs(filters?: { experienceLevel?: string; location?: string; search?: string; userId?: string }): Promise<(Job & { company: Company })[]> {
-    // In a real database implementation, you would join with a 'deleted_jobs' or similar table
-    // to filter out jobs deleted by the user.
-    // For this example, we'll assume a 'deleted_jobs' table or similar mechanism.
-
-    // Construct the base query
+    // Construct the base query to select jobs and join with companies
     let query = db
-      .select()
+      .select({
+        job: schema.jobs,
+        company: schema.companies,
+      })
       .from(schema.jobs)
       .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id));
 
     // Apply user-specific deletion filter if userId is provided
+    // This requires joining with the deletedPostsTable
     if (filters?.userId) {
-      // This is a placeholder for how you'd filter deleted jobs.
-      // You'd typically join with a 'deleted_jobs' table where deleted_jobs.jobId = jobs.id
-      // and deleted_jobs.userId = filters.userId
-      // Example:
-      // query = query.leftJoin(schema.deletedJobs, eq(schema.jobs.id, schema.deletedJobs.jobId));
-      // query = query.where(
-      //   and(
-      //     eq(schema.deletedJobs.userId, filters.userId),
-      //     isNull(schema.deletedJobs.deletedAt) // Assuming isNull checks for not deleted
-      //   )
-      // );
-
-      // For the sake of this example, we'll simulate filtering by checking against a hypothetical 'deletedPosts' in memory,
-      // which is not ideal for a database implementation but demonstrates the concept.
-      // A proper DB implementation would query a dedicated 'deleted_jobs' table.
-
-      // To make this runnable with the current schema, we will skip the actual database filtering for deleted jobs
-      // and rely on the MemStorage logic for demonstration. In a real DB, you'd need a proper join and WHERE clause.
+      query = query.leftJoin(deletedPostsTable, and(
+        eq(schema.jobs.id, deletedPostsTable.jobId),
+        eq(deletedPostsTable.userId, filters.userId)
+      ));
+      // Filter out jobs that have a corresponding entry in deletedPostsTable for the given user
+      query = query.where(isNull(deletedPostsTable.id));
     }
 
-
+    // Apply other filters
     if (filters?.experienceLevel) {
       query = query.where(eq(schema.jobs.experienceLevel, filters.experienceLevel));
     }
 
     if (filters?.location) {
-      // For location filtering, a simple LIKE might be needed, or a more advanced geospatial query.
-      // For now, we'll assume a direct match or a basic LIKE for demonstration.
       query = query.where(like(schema.jobs.location, `%${filters.location}%`));
     }
 
     if (filters?.search) {
-      // Similar to location, search would involve conditions on title, description, skills.
       query = query.where(
         or(
           like(schema.jobs.title, `%${filters.search}%`),
@@ -1322,28 +1350,30 @@ export class DbStorage implements IStorage {
       );
     }
 
-
     const jobsWithCompanies = await query;
 
-    // The mapping logic remains similar, ensuring the company is correctly associated.
+    // Map the results to the expected format
     return jobsWithCompanies.map(row => ({
-      ...row.jobs,
-      company: row.companies!
+      ...row.job,
+      company: row.company!
     }));
   }
 
   async getJob(id: string): Promise<(Job & { company: Company }) | undefined> {
     const result = await db
-      .select()
+      .select({
+        job: schema.jobs,
+        company: schema.companies,
+      })
       .from(schema.jobs)
       .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id))
       .where(eq(schema.jobs.id, id));
 
-    if (!result[0]) return undefined;
+    if (!result[0] || !result[0].job) return undefined;
 
     return {
-      ...result[0].jobs,
-      company: result[0].companies!
+      ...result[0].job,
+      company: result[0].company!
     };
   }
 
@@ -1376,7 +1406,6 @@ export class DbStorage implements IStorage {
   }
 
   async getUserApplications(userId: string): Promise<(Application & { job: Job & { company: Company } })[]> {
-    // Simplified version - you might want to improve this query
     const apps = await db.select().from(schema.applications).where(eq(schema.applications.userId, userId));
     const result = [];
 
@@ -1399,14 +1428,13 @@ export class DbStorage implements IStorage {
 
   // Course methods
   async getCourses(category?: string): Promise<Course[]> {
+    let query = db.select().from(schema.courses);
     if (category) {
-      // Make all courses free when fetching
-      const courses = await db.select().from(schema.courses).where(eq(schema.courses.category, category));
-      return courses.map(course => ({ ...course, price: "Free" }));
+      query = query.where(eq(schema.courses.category, category));
     }
+    const courses = await query;
     // Make all courses free when fetching
-    const allCourses = await db.select().from(schema.courses);
-    return allCourses.map(course => ({ ...course, price: "Free" }));
+    return courses.map(course => ({ ...course, price: "Free" }));
   }
 
   async getCourse(id: string): Promise<Course | undefined> {
@@ -1488,7 +1516,6 @@ export class DbStorage implements IStorage {
   // Deleted Posts methods for DbStorage (placeholder, actual implementation would involve a separate table or soft delete)
   async addDeletedPost(post: any): Promise<void> {
     // In a real DB, you'd insert into a 'deleted_posts' table
-    // For this example, we'll simulate it by just logging
     console.log("Adding post to deleted posts:", post);
     // Example: await db.insert(schema.deletedPosts).values({ ...post, deletedAt: new Date() });
   }
@@ -1500,11 +1527,110 @@ export class DbStorage implements IStorage {
     return []; // Placeholder
   }
 
-  async getUserDeletedPosts(userId: string): Promise<any[]> {
-    // In a real DB, you'd select from 'deleted_posts' and filter by userId
-    console.log(`Fetching deleted posts for user: ${userId}`);
-    // Example: return await db.select().from(schema.deletedPosts).where(and(eq(schema.deletedPosts.userId, userId), gt(schema.deletedPosts.deletedAt, new Date(Date.now() - 5 * 24 * 60 * 60 * 1000))));
-    return []; // Placeholder
+  async getUserDeletedPosts(userId: string): Promise<Array<DeletedPost & { job: Job & { company: Company } }>> {
+    console.log(`Getting deleted posts for user: ${userId}`);
+
+    try {
+      const deletedPosts = await db
+        .select({
+          id: deletedPostsTable.id,
+          userId: deletedPostsTable.userId,
+          jobId: deletedPostsTable.jobId,
+          deletedAt: deletedPostsTable.deletedAt,
+          jobTitle: jobsTable.title,
+          jobDescription: jobsTable.description,
+          jobRequirements: jobsTable.requirements,
+          jobQualifications: jobsTable.qualifications,
+          jobSkills: jobsTable.skills,
+          jobExperienceLevel: jobsTable.experienceLevel,
+          jobExperienceMin: jobsTable.experienceMin,
+          jobExperienceMax: jobsTable.experienceMax,
+          jobLocation: jobsTable.location,
+          jobType: jobsTable.jobType,
+          jobSalary: jobsTable.salary,
+          jobApplyUrl: jobsTable.applyUrl,
+          jobClosingDate: jobsTable.closingDate,
+          jobBatchEligible: jobsTable.batchEligible,
+          jobIsActive: jobsTable.isActive,
+          jobCompanyId: jobsTable.companyId,
+          jobCreatedAt: jobsTable.createdAt,
+          companyId: companiesTable.id,
+          companyName: companiesTable.name,
+          companyDescription: companiesTable.description,
+          companyWebsite: companiesTable.website,
+          companyLogo: companiesTable.logo,
+          companyLinkedinUrl: companiesTable.linkedinUrl,
+          companyIndustry: companiesTable.industry,
+          companySize: companiesTable.size,
+          companyLocation: companiesTable.location,
+          companyFounded: companiesTable.founded,
+          companyCreatedAt: companiesTable.createdAt
+        })
+        .from(deletedPostsTable)
+        .innerJoin(jobsTable, eq(deletedPostsTable.jobId, jobsTable.id))
+        .innerJoin(companiesTable, eq(jobsTable.companyId, companiesTable.id))
+        .where(eq(deletedPostsTable.userId, userId))
+        .orderBy(desc(deletedPostsTable.deletedAt));
+
+      console.log(`Raw query returned ${deletedPosts.length} deleted posts for user ${userId}`);
+
+      // Transform the flat result into nested objects
+      const transformedPosts = deletedPosts.map(post => ({
+        id: post.id,
+        userId: post.userId,
+        jobId: post.jobId,
+        deletedAt: post.deletedAt,
+        job: {
+          id: post.jobId,
+          title: post.jobTitle,
+          description: post.jobDescription,
+          requirements: post.jobRequirements,
+          qualifications: post.jobQualifications,
+          skills: post.jobSkills,
+          experienceLevel: post.jobExperienceLevel,
+          experienceMin: post.jobExperienceMin,
+          experienceMax: post.jobExperienceMax,
+          location: post.jobLocation,
+          jobType: post.jobType,
+          salary: post.jobSalary,
+          applyUrl: post.jobApplyUrl,
+          closingDate: post.jobClosingDate,
+          batchEligible: post.jobBatchEligible,
+          isActive: post.jobIsActive,
+          companyId: post.jobCompanyId,
+          createdAt: post.jobCreatedAt,
+          company: {
+            id: post.companyId,
+            name: post.companyName,
+            description: post.companyDescription,
+            website: post.companyWebsite,
+            logo: post.companyLogo,
+            linkedinUrl: post.companyLinkedinUrl,
+            industry: post.companyIndustry,
+            size: post.companySize,
+            location: post.companyLocation,
+            founded: post.companyFounded,
+            createdAt: post.companyCreatedAt
+          }
+        }
+      }));
+
+      console.log(`Transformed ${transformedPosts.length} deleted posts for user ${userId}`);
+
+      if (transformedPosts.length > 0) {
+        console.log(`Sample deleted post:`, {
+          id: transformedPosts[0].id,
+          jobTitle: transformedPosts[0].job.title,
+          companyName: transformedPosts[0].job.company.name,
+          deletedAt: transformedPosts[0].deletedAt
+        });
+      }
+
+      return transformedPosts as Array<DeletedPost & { job: Job & { company: Company } }>;
+    } catch (error) {
+      console.error(`Error fetching deleted posts for user ${userId}:`, error);
+      return [];
+    }
   }
 
 
@@ -1512,6 +1638,85 @@ export class DbStorage implements IStorage {
     // In a real DB, you'd delete from 'deleted_posts'
     console.log(`Deleting post with ID ${id} from deleted posts.`);
     // Example: await db.delete(schema.deletedPosts).where(eq(schema.deletedPosts.id, id));
+  }
+
+  async softDeleteJob(jobId: string, userId: string): Promise<DeletedPost> {
+    console.log(`[${new Date().toLocaleTimeString()}] Soft deleting job ${jobId} for user ${userId}`);
+
+    try {
+      // First verify the job exists
+      const jobExists = await db
+        .select({ id: jobsTable.id })
+        .from(jobsTable)
+        .where(eq(jobsTable.id, jobId))
+        .limit(1);
+
+      if (jobExists.length === 0) {
+        throw new Error(`Job ${jobId} not found`);
+      }
+
+      // Check if already deleted by this user
+      const existingDeletedPost = await db
+        .select()
+        .from(deletedPostsTable)
+        .where(and(
+          eq(deletedPostsTable.jobId, jobId),
+          eq(deletedPostsTable.userId, userId)
+        ))
+        .limit(1);
+
+      if (existingDeletedPost.length > 0) {
+        console.log(`[${new Date().toLocaleTimeString()}] Job ${jobId} already soft deleted for user ${userId}`);
+        return existingDeletedPost[0];
+      }
+
+      // Create deleted post entry
+      const deletedPost = {
+        id: nanoid(),
+        userId,
+        jobId,
+        deletedAt: new Date()
+      };
+
+      console.log(`[${new Date().toLocaleTimeString()}] Creating deleted post entry:`, deletedPost);
+
+      const result = await db
+        .insert(deletedPostsTable)
+        .values(deletedPost)
+        .returning();
+
+      console.log(`[${new Date().toLocaleTimeString()}] Successfully created deleted post entry:`, result[0]);
+
+      // Verify the entry was created
+      const verification = await db
+        .select()
+        .from(deletedPostsTable)
+        .where(eq(deletedPostsTable.id, result[0].id))
+        .limit(1);
+
+      console.log(`[${new Date().toLocaleTimeString()}] Verification check:`, verification);
+
+      return result[0];
+    } catch (error) {
+      console.error(`[${new Date().toLocaleTimeString()}] Error soft deleting job ${jobId} for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async softDeleteApplication(applicationId: string): Promise<any> {
+    // This method is not implemented in the DbStorage for now, as the focus was on jobs.
+    // A full implementation would involve a similar logic to softDeleteJob but for applications.
+    throw new Error("Method not implemented for DbStorage.");
+  }
+
+  async restoreDeletedPost(deletedPostId: string): Promise<any> {
+    // This method is not implemented in the DbStorage for now.
+    throw new Error("Method not implemented for DbStorage.");
+  }
+
+  async permanentlyDeletePost(deletedPostId: string): Promise<void> {
+    // This method is not implemented in the DbStorage for now.
+    throw new Error("Method not implemented for DbStorage.");
   }
 }
 
