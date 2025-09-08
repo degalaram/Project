@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/api';
 import { Navbar } from '@/components/job-portal/navbar';
 import { 
   Briefcase, 
@@ -35,10 +35,31 @@ export default function DeletedPosts() {
     setUser(JSON.parse(userData));
   }, [navigate]);
 
-  const { data: deletedPosts = [], isLoading } = useQuery({
-    queryKey: ['/api/deleted-posts/user', user.id],
+  const { data: deletedPosts = [], isLoading, error } = useQuery({
+    queryKey: ['deleted-posts', user.id],
+    queryFn: async () => {
+      if (!user.id) return [];
+      console.log(`Fetching deleted posts for user: ${user.id}`);
+      const response = await apiRequest('GET', `/api/deleted-posts/user/${user.id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch deleted posts');
+      }
+      const data = await response.json();
+      console.log(`Received deleted posts:`, data);
+      return Array.isArray(data) ? data : [];
+    },
     enabled: !!user.id,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  // Add logging for debugging
+  console.log('User ID:', user.id);
+  console.log('Deleted posts data:', deletedPosts);
+  console.log('Query error:', error);
+  console.log('Loading state:', isLoading);
 
   const restorePostMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -50,7 +71,7 @@ export default function DeletedPosts() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
       queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
@@ -71,16 +92,21 @@ export default function DeletedPosts() {
   const permanentDeleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       const response = await apiRequest('DELETE', `/api/deleted-posts/${postId}/permanent`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to permanently delete post');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
       toast({
         title: 'Post permanently deleted',
         description: 'The post has been permanently removed and cannot be restored.',
       });
     },
     onError: (error: any) => {
+      console.error('Permanent delete error:', error);
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to permanently delete post',
@@ -120,6 +146,28 @@ export default function DeletedPosts() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">Error Loading Posts</h3>
+            <p className="text-gray-600 mb-6">
+              Something went wrong while fetching your deleted posts. Please try again later.
+            </p>
+            <Button onClick={() => navigate('/jobs')} data-testid="browse-jobs-button">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Go to Jobs
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
