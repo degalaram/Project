@@ -3,12 +3,12 @@ import { QueryClient } from "@tanstack/react-query";
 // Determine API base URL based on environment
 const getApiBaseUrl = () => {
   // Check for explicit API URL first
-  if (import.meta.env.VITE_API_URL) {
+  if (import.meta.env?.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
 
   // In development, check if running in Replit
-  if (import.meta.env.DEV) {
+  if (import.meta.env?.DEV) {
     // Use current hostname with port 5000 for Replit development
     if (window.location.hostname.includes('replit.dev') || 
         window.location.hostname.includes('repl.co') || 
