@@ -74,6 +74,19 @@ export const contacts = pgTable("contacts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const deletedPosts = pgTable("deleted_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  jobId: varchar("job_id"),
+  applicationId: varchar("application_id"),
+  deletedAt: timestamp("deleted_at").defaultNow(),
+});
+
+// Export table aliases for compatibility
+export const deletedPostsTable = deletedPosts;
+export const jobsTable = jobs;
+export const companiesTable = companies;
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
