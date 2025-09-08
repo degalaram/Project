@@ -38,6 +38,7 @@ import {
   Edit
 } from 'lucide-react';
 import type { Course } from '@shared/schema';
+import { getSkillImage, getSkillIcon } from '@/utils/skillImages';
 
 // Edit Course Dialog Component
 function EditCourseDialog({ course, children }: { course: any; children: React.ReactNode }) {
@@ -605,7 +606,27 @@ export default function Courses() {
       
       // SAP
       'sap-basics': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAwNzNlNyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQVA8L3RleHQ+PC9zdmc+',
-      'sap-abap': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAwNzNlNyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQVA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIxOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkFCQVA8L3RleHQ+PC9zdmc+'
+      'sap-abap': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAwNzNlNyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQVA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIxOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkFCQVA8L3RleHQ+PC9zdmc+',
+
+      // Additional Technologies
+      'typescript': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzNmN2Y5ZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VFM8L3RleHQ+PC9zdmc+',
+      'bootstrap': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzU2M2Q3YyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTgwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5CT09UU1RSQVA8L3RleHQ+PC9zdmc+',
+      'tailwind': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzA2YjZkNCIvPjx0ZXh0IHg9IjEyOCIgeT0iMTgwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UQUlMV0lORDwvdGV4dD48L3N2Zz4=',
+      'mongodb': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAwZWQ2NCIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NT05HT0RCPC90ZXh0Pjwvc3ZnPg==',
+      'mysql': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2YyOTExMSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NeVNRTDwvdGV4dD48L3N2Zz4=',
+      'postgresql': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzMzNjc5MSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QT1NUUkVTUUw8L3RleHQ+PC9zdmc+',
+      'php': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzc4N2NiNSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QSFA8L3RleHQ+PC9zdmc+',
+      'laravel': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2ZmMjc2NSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MQVJBVkVMPC90ZXh0Pjwvc3ZnPg==',
+      'firebase': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2ZmY2E0NyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMDYxYTIzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GSVJFQkFTRTwvdGV4dD48L3N2Zz4=',
+      'flutter': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAyNTY5YiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GTFVUVEVSPC90ZXh0Pjwvc3ZnPg==',
+      'swift': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2ZhNzM0MyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TV0lGVDwvdGV4dD48L3N2Zz4=',
+      'kotlin': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzc5ODFmZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5LT1RMSU48L3RleHQ+PC9zdmc+',
+      'csharp': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzIzOGYyZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DIzwvdGV4dD48L3N2Zz4=',
+      'rust': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2RlYTU4NCIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SVVNUPC90ZXh0Pjwvc3ZnPg==',
+      'git': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y5NDAzMSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5HSVQ8L3RleHQ+PC9zdmc+',
+      'linux': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MSU5VWDwvdGV4dD48L3N2Zz4=',
+      'redis': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2RjMzgyZCIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SRURJUzwvdGV4dD48L3N2Zz4=',
+      'graphql': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2U0MDA3ZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5HUkFQSFFMPC90ZXh0Pjwvc3ZnPg=='
     };
 
     return imageMap[courseId] || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzY2NjY2NiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DT1VSU0U8L3RleHQ+PC9zdmc+';
@@ -754,103 +775,31 @@ export default function Courses() {
 
                     {/* Skills Preview with Technology Icons */}
                     <div className="flex flex-wrap gap-1.5 mb-2">
-                      {course.id === 'html-css' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML5" className="w-4 h-4" />
-                            <span className="text-xs text-orange-700 font-medium hidden sm:inline">HTML5</span>
+                      {course.skills.split(',').slice(0, 4).map((skill, index) => {
+                        const trimmedSkill = skill.trim();
+                        const skillImage = getSkillImage(trimmedSkill);
+                        return (
+                          <div key={index} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md">
+                            {skillImage ? (
+                              <img 
+                                src={skillImage} 
+                                alt={trimmedSkill}
+                                className="w-4 h-4 object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling!.style.display = 'inline';
+                                }}
+                              />
+                            ) : null}
+                            <span style={{display: skillImage ? 'none' : 'inline'}} className="text-xs font-medium">{getSkillIcon(trimmedSkill)}</span>
+                            <span className="text-xs text-gray-700 font-medium hidden sm:inline">{trimmedSkill}</span>
                           </div>
-                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" alt="CSS3" className="w-4 h-4" />
-                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">CSS3</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'javascript' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-yellow-50 border border-yellow-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" alt="JavaScript" className="w-4 h-4" />
-                            <span className="text-xs text-yellow-700 font-medium hidden sm:inline">JavaScript</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
-                            <span className="text-xs text-green-700 font-medium">ES6+</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'react' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-cyan-50 border border-cyan-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React" className="w-4 h-4" />
-                            <span className="text-xs text-cyan-700 font-medium hidden sm:inline">React</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-purple-50 border border-purple-200 px-2 py-1 rounded-md">
-                            <span className="text-xs text-purple-700 font-medium">Hooks</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'angular' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-red-50 border border-red-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angularjs/angularjs-original.svg" alt="Angular" className="w-4 h-4" />
-                            <span className="text-xs text-red-700 font-medium hidden sm:inline">Angular</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" alt="TypeScript" className="w-4 h-4" />
-                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">TypeScript</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'vue' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vuejs/vuejs-original.svg" alt="Vue.js" className="w-4 h-4" />
-                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Vue.js</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'python' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python" className="w-4 h-4" />
-                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">Python</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'java' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" alt="Java" className="w-4 h-4" />
-                            <span className="text-xs text-orange-700 font-medium hidden sm:inline">Java</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'sql' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" alt="SQL" className="w-4 h-4" />
-                            <span className="text-xs text-blue-700 font-medium hidden sm:inline">SQL</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'nodejs' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" alt="Node.js" className="w-4 h-4" />
-                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Node.js</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg" alt="Express" className="w-4 h-4" />
-                            <span className="text-xs text-gray-700 font-medium hidden sm:inline">Express</span>
-                          </div>
-                        </>
-                      )}
-                      {course.id === 'django' && (
-                        <>
-                          <div className="flex items-center gap-1 bg-green-50 border border-green-200 px-2 py-1 rounded-md">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/django/django-plain.svg" alt="Django" className="w-4 h-4" />
-                            <span className="text-xs text-green-700 font-medium hidden sm:inline">Django</span>
-                          </div>
-                        </>
+                        );
+                      })}
+                      {course.skills.split(',').length > 4 && (
+                        <div className="bg-gray-100 border border-gray-200 px-2 py-1 rounded-md">
+                          <span className="text-xs text-gray-600 font-medium">+{course.skills.split(',').length - 4} more</span>
+                        </div>
                       )}
                       {course.id === 'golang' && (
                         <>
