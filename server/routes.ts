@@ -9,13 +9,12 @@ import {
   insertContactSchema,
   insertCompanySchema,
   loginSchema
-} from "@shared/schema";
+} from "../shared/schema.js";
 import path from 'path';
 import fs from 'fs';
 import { marked } from 'marked';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
-import { nanoid } from 'nanoid';
 import { nanoid } from 'nanoid';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -250,7 +249,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create application if not exists (to track the delete action)
-      const existingApplication = storage.applications.find(app => app.userId === userId && app.jobId === jobId);
+      const existingApplication = await storage.getUserApplications(userId).then(apps => 
+        apps.find(app => app.job.id === jobId)
+      );
       if (!existingApplication) {
         const newApplication = {
           id: nanoid(),
