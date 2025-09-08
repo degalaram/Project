@@ -7,6 +7,7 @@ import {
   insertApplicationSchema,
   insertContactSchema,
   insertCompanySchema,
+  insertCourseSchema,
   loginSchema
 } from "../shared/schema.js";
 import path from 'path';
