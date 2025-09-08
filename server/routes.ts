@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import {
   insertUserSchema,
   insertJobSchema,
-  insertCourseSchema,
   insertApplicationSchema,
   insertContactSchema,
   insertCompanySchema,
@@ -374,16 +373,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get deleted posts for a user
-  app.get("/api/deleted-posts/user/:userId", async (req, res) => {
+  app.get("/api/deleted-posts/user/:userId", (req, res) => {
+    const { userId } = req.params;
+    console.log(`API: Getting deleted posts for user ${userId}`);
+
     try {
-      const userId = req.params.userId;
-      console.log(`API: Getting deleted posts for user ${userId}`);
-      const deletedPosts = await storage.getUserDeletedPosts(userId);
-      console.log(`API: Returning ${deletedPosts.length} deleted posts for user ${userId}`);
-      res.json(deletedPosts);
+      const deletedPosts = storage.getDeletedPosts(userId);
+      console.log(`API: Raw deleted posts from storage:`, deletedPosts);
+
+      // Ensure each deleted post has complete job data
+      const enrichedDeletedPosts = deletedPosts.map(deletedPost => {
+        if (!deletedPost.job) {
+          console.warn('Deleted post missing job data:', deletedPost);
+          // Try to find the job from the jobs list
+          const job = storage.getJobs().find(j => j.id === deletedPost.jobId);
+          if (job) {
+            deletedPost.job = job;
+          } else {
+            console.error('Could not find job data for deleted post:', deletedPost);
+          }
+        }
+        return deletedPost;
+      });
+
+      console.log(`API: Returning ${enrichedDeletedPosts.length} deleted posts for user ${userId}`);
+      res.json(enrichedDeletedPosts);
     } catch (error) {
-      console.error("Error fetching deleted posts:", error);
-      res.status(500).json({ message: "Failed to fetch deleted posts" });
+      console.error('Error fetching deleted posts:', error);
+      res.status(500).json({ error: 'Failed to fetch deleted posts', details: error.message });
     }
   });
 
