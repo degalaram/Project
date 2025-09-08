@@ -23,6 +23,7 @@ import {
   Code,
   Globe
 } from 'lucide-react';
+import { getSkillImage, getSkillIcon } from '@/utils/skillImages';
 
 interface CourseData {
   id: string;
@@ -413,29 +414,150 @@ export default function CourseDetails() {
     }
   };
 
+  // Using shared utility function from @/utils/skillImages
+
   const getSkillIcon = (skill: string) => {
     const skillIcons: Record<string, string> = {
+      // Frontend Technologies
       'HTML5': '🌐',
       'CSS3': '🎨',
+      'JavaScript': '⚡',
       'JavaScript ES6+': '⚡',
+      'TypeScript': '📘',
       'React': '⚛️',
       'Angular': '🅰️',
       'Vue.js': '💚',
+      'Bootstrap': '🅱️',
+      'Tailwind CSS': '🎨',
+      'Responsive Design': '📱',
+      'Web Accessibility': '♿',
+      'Browser DevTools': '🔧',
+      'JSX': '⚛️',
+      'Hooks': '🪝',
+      'Context API': '🔄',
+      'React Router': '🛣️',
+      'Redux': '🔄',
+      'DOM Manipulation': '🎛️',
+      'Async/Await': '⏱️',
+      'Fetch API': '📡',
+      'Error Handling': '🚨',
+
+      // Backend Technologies
       'Python': '🐍',
       'Java': '☕',
-      'SQL': '🗃️',
+      'PHP': '🐘',
+      'C#': '🔷',
+      'Go': '🔷',
+      'Rust': '🦀',
       'Node.js': '🟢',
       'Django': '🎸',
-      'Go': '🔷',
+      'Laravel': '🔺',
+      'Express.js': '🚂',
+      'Spring Boot': '🍃',
+      'Flask': '🧪',
+      'ASP.NET': '🌐',
+      'FastAPI': '⚡',
+      'NestJS': '🐱',
+      'API Development': '🔌',
+      'RESTful APIs': '🔗',
+      'GraphQL': '📊',
+      'Microservices': '🏗️',
+
+      // Database Technologies
+      'SQL': '🗃️',
+      'MySQL': '🐬',
+      'PostgreSQL': '🐘',
+      'MongoDB': '🍃',
+      'Redis': '🔴',
+      'SQLite': '📦',
+      'Database Design': '🗄️',
+      'Query Optimization': '⚡',
+      'Data Modeling': '📐',
+
+      // Mobile Development
+      'Flutter': '📱',
+      'React Native': '📱',
+      'Swift': '🍎',
+      'Kotlin': '📱',
+      'Android': '🤖',
+      'iOS': '🍎',
+      'Cross-platform': '🌉',
+
+      // Testing Technologies
       'Selenium WebDriver': '🤖',
       'Jest': '🃏',
       'Cypress': '🌲',
+      'Unit Testing': '🧪',
+      'Integration Testing': '🔗',
+      'Test Automation': '🤖',
+      'Quality Assurance': '✅',
+      'Test-Driven Development': '🔄',
+
+      // DevOps & Cloud
       'Docker': '🐳',
       'Kubernetes': '☸️',
       'AWS': '☁️',
+      'Azure': '☁️',
+      'Google Cloud': '☁️',
       'Jenkins': '🔨',
+      'GitLab CI': '🦊',
+      'GitHub Actions': '⚙️',
+      'Terraform': '🏗️',
+      'Ansible': '📋',
+      'CI/CD': '🔄',
+      'Build Automation': '🏗️',
+      'Pipeline': '🚰',
+      'DevOps': '♾️',
+      'Cloud Computing': '☁️',
+      'Infrastructure': '🏗️',
+      'Monitoring': '📊',
+
+      // Security
+      'Cybersecurity': '🔒',
+      'Ethical Hacking': '🎭',
+      'Network Security': '🛡️',
+      'Penetration Testing': '🔍',
+      'Vulnerability Assessment': '🔍',
+      'Security Auditing': '🔍',
+      'Cryptography': '🔐',
+      'Firewall': '🛡️',
+
+      // Tools & Platforms
+      'Git': '📚',
+      'GitHub': '🐙',
+      'GitLab': '🦊',
+      'Linux': '🐧',
+      'Windows': '🪟',
+      'macOS': '🍎',
+      'Firebase': '🔥',
+      'Supabase': '⚡',
+      'Vercel': '▲',
+      'Netlify': '🌐',
+      'Heroku': '🟣',
+
+      // SAP Technologies
       'SAP ERP': '🏢',
-      'SAP ABAP': '📊'
+      'SAP ABAP': '📊',
+      'SAP Modules': '📚',
+      'Business Processes': '🔄',
+      'SAP Navigation': '🧭',
+      'Master Data': '📋',
+      'SAP Development': '💻',
+      'Data Dictionary': '📖',
+      'ALV Reports': '📊',
+      'Module Pool': '🎯',
+      'Enhancement Framework': '🔧',
+
+      // Soft Skills
+      'Problem Solving': '🧩',
+      'Critical Thinking': '🤔',
+      'Project Management': '📋',
+      'Team Collaboration': '👥',
+      'Communication': '💬',
+      'Leadership': '👑',
+      'Agile': '🔄',
+      'Scrum': '🏃',
+      'Time Management': '⏰'
     };
     return skillIcons[skill] || '💡';
   };
@@ -539,12 +661,26 @@ export default function CourseDetails() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {course.skills.map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-sm flex items-center gap-1">
-                      <span>{getSkillIcon(skill)}</span>
-                      {skill}
-                    </Badge>
-                  ))}
+                  {course.skills.map((skill, index) => {
+                    const skillImage = getSkillImage(skill);
+                    return (
+                      <Badge key={index} variant="outline" className="text-sm flex items-center gap-2 px-3 py-1">
+                        {skillImage ? (
+                          <img 
+                            src={skillImage} 
+                            alt={skill}
+                            className="w-4 h-4 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling!.style.display = 'inline';
+                            }}
+                          />
+                        ) : null}
+                        <span style={{display: skillImage ? 'none' : 'inline'}}>{getSkillIcon(skill)}</span>
+                        {skill}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
