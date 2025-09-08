@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,57 +24,75 @@ export default function DeletedPosts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [user, setUser] = useState<any>({});
+  const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
 
   // Check if user is logged in
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    try {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        navigate('/login');
+        return;
+      }
+      
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser && parsedUser.id) {
+        console.log('User loaded:', parsedUser.id);
+        setUser(parsedUser);
+      } else {
+        navigate('/login');
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
       navigate('/login');
       return;
+    } finally {
+      setUserLoading(false);
     }
-    setUser(JSON.parse(userData));
   }, [navigate]);
 
-  const { data: deletedPosts = [], isLoading, error } = useQuery({
-    queryKey: ['deleted-posts', user.id],
+  const { data: deletedPosts = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['deleted-posts', user?.id],
     queryFn: async () => {
-      if (!user.id) return [];
-      console.log(`Fetching deleted posts for user: ${user.id}`);
-      const response = await apiRequest('GET', `/api/deleted-posts/user/${user.id}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch deleted posts');
+      if (!user?.id) {
+        return [];
       }
+      
+      console.log(`Fetching deleted posts for user: ${user.id}`);
+      
+      const response = await apiRequest('GET', `/api/deleted-posts/user/${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch deleted posts: ${response.status}`);
+      }
+      
       const data = await response.json();
-      console.log(`Received deleted posts:`, data);
+      console.log(`Successfully received ${Array.isArray(data) ? data.length : 0} deleted posts`);
       return Array.isArray(data) ? data : [];
     },
-    enabled: !!user.id,
-    staleTime: 0,
+    enabled: !!user?.id && !userLoading,
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: 30000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
-
-  // Add logging for debugging
-  console.log('User ID:', user.id);
-  console.log('Deleted posts data:', deletedPosts);
-  console.log('Query error:', error);
-  console.log('Loading state:', isLoading);
 
   const restorePostMutation = useMutation({
     mutationFn: async (postId: string) => {
       const response = await apiRequest('POST', `/api/deleted-posts/${postId}/restore`);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to restore post');
+        const errorText = await response.text();
+        throw new Error(`Failed to restore post: ${errorText}`);
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
       toast({
         title: 'Post restored successfully',
         description: 'Your job application has been restored and moved back to My Applications.',
@@ -93,13 +112,13 @@ export default function DeletedPosts() {
     mutationFn: async (postId: string) => {
       const response = await apiRequest('DELETE', `/api/deleted-posts/${postId}/permanent`);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to permanently delete post');
+        const errorText = await response.text();
+        throw new Error(`Failed to permanently delete post: ${errorText}`);
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user?.id] });
       toast({
         title: 'Post permanently deleted',
         description: 'The post has been permanently removed and cannot be restored.',
@@ -133,6 +152,22 @@ export default function DeletedPosts() {
     return Math.max(0, daysLeft);
   };
 
+  // Show loading while checking user authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while fetching deleted posts
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -147,6 +182,7 @@ export default function DeletedPosts() {
     );
   }
 
+  // Show error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -156,18 +192,22 @@ export default function DeletedPosts() {
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">Error Loading Posts</h3>
             <p className="text-gray-600 mb-6">
-              Something went wrong while fetching your deleted posts. Please try again later.
+              {error?.message || 'Something went wrong while fetching your deleted posts.'}
             </p>
-            <Button onClick={() => navigate('/jobs')} data-testid="browse-jobs-button">
-              <Briefcase className="w-4 h-4 mr-2" />
-              Go to Jobs
-            </Button>
+            <div className="space-x-2">
+              <Button onClick={() => refetch()} variant="outline">
+                Try Again
+              </Button>
+              <Button onClick={() => navigate('/jobs')}>
+                <Briefcase className="w-4 h-4 mr-2" />
+                Go to Jobs
+              </Button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-gray-50">
