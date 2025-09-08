@@ -26,46 +26,25 @@ const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl();
 
 // API request utility function
-export async function apiRequest(method: string, url: string, data?: any) {
-  const config: RequestInit = {
+export async function apiRequest(
+  method: string,
+  url: string,
+  body?: any,
+  customHeaders?: Record<string, string>
+): Promise<Response> {
+  const options: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...customHeaders,
     },
   };
 
-  // Add user-id header if user is logged in
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user && user.id) {
-      (config.headers as Record<string, string>)['user-id'] = user.id;
-    }
-  } catch (error) {
-    // Ignore localStorage errors
+  if (body) {
+    options.body = JSON.stringify(body);
   }
 
-  if (data) {
-    config.body = JSON.stringify(data);
-  }
-
-  const response = await fetch(url, config);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `Request failed: ${response.status}`;
-
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch {
-      // If response is not JSON, use the text as error message
-      errorMessage = errorText || errorMessage;
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  return response;
+  return fetch(url, options);
 }
 
 export const queryClient = new QueryClient({
