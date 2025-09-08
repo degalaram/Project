@@ -25,6 +25,7 @@ import {
   Target
 } from 'lucide-react';
 import type { Job, Company } from '@shared/schema';
+import { getSkillImage } from '@/utils/skillImages';
 
 type JobWithCompany = Job & { company: Company };
 
@@ -277,11 +278,25 @@ export default function JobDetails() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {job.skills.split(',').map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm">
-                      {skill.trim()}
-                    </Badge>
-                  ))}
+                  {job.skills.split(',').map((skill, index) => {
+                    const trimmedSkill = skill.trim();
+                    const skillImage = getSkillImage(trimmedSkill);
+                    return (
+                      <Badge key={index} variant="secondary" className="text-sm flex items-center gap-2 px-3 py-1">
+                        {skillImage && (
+                          <img 
+                            src={skillImage} 
+                            alt={trimmedSkill}
+                            className="w-4 h-4 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        {trimmedSkill}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
