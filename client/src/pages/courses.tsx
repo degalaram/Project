@@ -540,7 +540,7 @@ export default function Courses() {
   ];
 
   // Combine database courses with static free courses
-  const allCourses = [...dbCourses, ...freeCourses];
+  const allCourses = [...(Array.isArray(dbCourses) ? dbCourses : []), ...freeCourses];
 
   const filteredCourses = allCourses.filter((course) => {
     const matchesSearch = searchTerm === '' || 
@@ -574,14 +574,44 @@ export default function Courses() {
 
   const getCourseImage = (courseId: string) => {
     const imageMap: Record<string, string> = {
-      // Frontend Technologies
-      'html-css': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cGF0aCBmaWxsPSIjZTM0YzI2IiBkPSJtMjAgMCAxNCAxNzUgMTAyIDI5IDEwMi0yOUwyNTIgMEgyMHoiLz48cGF0aCBmaWxsPSIjZWY2NTJhIiBkPSJtMTI4IDI1IDkwLTI1djE1MEwxMjggMjAxVjI1eiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTQ0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNzAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5IVE1MPC90ZXh0Pjwvc3ZnPg==',
-      'javascript': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2YxZDg0ZSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzFhMWExYSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SlM8L3RleHQ+PC9zdmc+',
-      'react': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzIzMjMyMyIvPjxnIGZpbGw9IiM2MWRhZmIiPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjEyOCIgcj0iMjQiLz48ZWxsaXBzZSBjeD0iMTI4IiBjeT0iMTI4IiByeD0iOTQiIHJ5PSIzOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjFkYWZiIiBzdHJva2Utd2lkdGg9IjgiLz48ZWxsaXBzZSBjeD0iMTI4IiBjeT0iMTI4IiByeD0iOTQiIHJ5PSIzOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjFkYWZiIiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDYwIDEyOCAxMjgpIi8+PGVsbGlwc2UgY3g9IjEyOCIgY3k9IjEyOCIgcng9Ijk0IiByeT0iMzkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzYxZGFmYiIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgtNjAgMTI4IDEyOCkiLz48L2c+PC9zdmc+',
-      'angular': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cGF0aCBmaWxsPSIjZGQwMDMxIiBkPSJNMTI4IDAgTDI0MCA0NSAyMTYgMTgwIDEyOCAyMzYgNDAgMTgwIDE2IDQ1IFoiLz48cGF0aCBmaWxsPSIjYzMwMDJmIiBkPSJNMTI4IDAgTDI0MCA0NSAyMTYgMTgwIDEyOCAyMzYgViAwIFoiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTI4IDQ4IDk2IDEzNiBIMTYwIFogTTEyOCAxNjAgOTYgMTkyIEgxNjAgWiIvPjx0ZXh0IHg9IjEyOCIgeT0iMjEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BTkdVTEFSPC90ZXh0Pjwvc3ZnPg==',
-      'vue': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cGF0aCBmaWxsPSIjNGZjMDhmIiBkPSJNMTI4IDMwIDIwMCA4MCA1NiA4MFoiLz48cGF0aCBmaWxsPSIjMzU0OTVlIiBkPSJNMTI4IDMwIDIwMCA4MCAyMDAgMjI2IDEyOCAzMCBaIi8+PHBhdGggZmlsbD0iIzQxYjg4MyIgZD0iTTEyOCAzMCA1NiA4MCA1NiAyMjYgMTI4IDMwIFoiLz48dGV4dCB4PSIxMjgiIHk9IjE2MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjQwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VlVFPC90ZXh0Pjwvc3ZnPg==',
+      // Database courses from backend
+      'html-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg',
+      'python-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg',
+      'javascript-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg',
+      'react-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg',
+      'nodejs-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg',
+      'data-structures-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg',
+      'machine-learning-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tensorflow/tensorflow-original.svg',
+      'cybersecurity-course': 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F595%2F595067.png&f=1&nofb=1',
+      'database-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg',
+      'cloud-computing-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg',
+      'devops-course': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg',
       
-      // Backend Technologies
+      // Static courses from frontend
+      'html-css': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg',
+      'javascript': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg',
+      'react': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg',
+      'angular': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angularjs/angularjs-original.svg',
+      'vue': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vuejs/vuejs-original.svg',
+      'python': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg',
+      'java': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg',
+      'sql': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg',
+      'nodejs': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg',
+      'django': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/django/django-plain.svg',
+      'golang': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/go/go-original.svg',
+      'selenium': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/selenium/selenium-original.svg',
+      'jest': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jest/jest-plain.svg',
+      'cypress': 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F8%2F8c%2FCypress_Software_logo.png&f=1&nofb=1',
+      'ethical-hacking': 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2910%2F2910791.png&f=1&nofb=1',
+      'network-security': 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F1835%2F1835670.png&f=1&nofb=1',
+      'docker': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg',
+      'kubernetes': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kubernetes/kubernetes-original.svg',
+      'aws': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg',
+      'jenkins': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jenkins/jenkins-original.svg',
+      'sap-basics': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sap/sap-original.svg',
+      'sap-abap': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sap/sap-original.svg',
+      
+      // Frontend Technologies
       'python': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cGF0aCBmaWxsPSIjMzc3NmFiIiBkPSJNMTI4IDI0IDcyIDQ4IDcyIDEwNCAxMjggMTI4IDE4NCAxMDQgMTg0IDQ4IFoiLz48cGF0aCBmaWxsPSIjZmZkNDNiIiBkPSJNMTI4IDI0IDcyIDQ4IDcyIDEwNCAxMjggMTI4IDEyOCAyMzIgMTg0IDIwOCAxODQgMTUyIDEyOCAxMjggWiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QWVRIT048L3RleHQ+PC9zdmc+',
       'java': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2VkOGIwMCIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5KQVZBPC90ZXh0Pjwvc3ZnPg==',
       'sql': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzAwNzI4ZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMTc2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TUUw8L3RleHQ+PC9zdmc+',
@@ -732,8 +762,27 @@ export default function Courses() {
               >
                 <div className="relative">
                   <div className="w-full h-32 sm:h-40 md:h-48 overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center border-b dark:border-gray-700">
-                    <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 text-white" />
+                    <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center relative">
+                      {getCourseImage(course.id) ? (
+                        <img 
+                          src={getCourseImage(course.id)} 
+                          alt={course.title}
+                          className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl md:text-2xl"
+                        style={{display: getCourseImage(course.id) ? 'none' : 'flex'}}
+                      >
+                        {course.title.charAt(0).toUpperCase()}
+                      </div>
                     </div>
                   </div>
                   <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
@@ -775,7 +824,7 @@ export default function Courses() {
 
                     {/* Skills Preview with Technology Icons */}
                     <div className="flex flex-wrap gap-1.5 mb-2">
-                      {course.skills.split(',').slice(0, 4).map((skill, index) => {
+                      {(course.skills ? course.skills.split(',') : []).slice(0, 4).map((skill: string, index: number) => {
                         const trimmedSkill = skill.trim();
                         const skillImage = getSkillImage(trimmedSkill);
                         return (
@@ -787,7 +836,10 @@ export default function Courses() {
                                 className="w-4 h-4 object-contain"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling!.style.display = 'inline';
+                                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'inline';
+                                  }
                                 }}
                               />
                             ) : null}
@@ -796,9 +848,9 @@ export default function Courses() {
                           </div>
                         );
                       })}
-                      {course.skills.split(',').length > 4 && (
+                      {(course.skills ? course.skills.split(',').length : 0) > 4 && (
                         <div className="bg-gray-100 border border-gray-200 px-2 py-1 rounded-md">
-                          <span className="text-xs text-gray-600 font-medium">+{course.skills.split(',').length - 4} more</span>
+                          <span className="text-xs text-gray-600 font-medium">+{(course.skills ? course.skills.split(',').length : 0) - 4} more</span>
                         </div>
                       )}
                       {course.id === 'golang' && (
