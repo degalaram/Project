@@ -711,20 +711,7 @@ export default function Courses() {
               >
                 <div className="relative">
                   <div className="w-full h-32 sm:h-40 md:h-48 overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center border-b dark:border-gray-700">
-                    <img 
-                      src={getCourseImage(course.id)} 
-                      alt={course.title}
-                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain transition-transform duration-300 group-hover:scale-110"
-                      onError={(e) => {
-                        // Fallback to gradient if image fails to load
-                        e.currentTarget.style.display = 'none';
-                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (nextElement) {
-                          nextElement.style.display = 'flex';
-                        }
-                      }}
-                    />
-                    <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 to-purple-600 hidden items-center justify-center absolute inset-0">
+                    <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                       <BookOpen className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 text-white" />
                     </div>
                   </div>
