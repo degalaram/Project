@@ -129,7 +129,7 @@ const getLevelColor = (level: string) => {
     if (company.logo && company.logo.trim()) {
       return company.logo;
     }
-    
+
     // Major tech companies with specific logo mappings
     const companyLogos = {
       'accenture': 'https://logo.clearbit.com/accenture.com',
@@ -188,7 +188,7 @@ const getLevelColor = (level: string) => {
         const linkedinUrl = new URL(company.linkedinUrl);
         const pathParts = linkedinUrl.pathname.split('/');
         const companySlug = pathParts[pathParts.indexOf('company') + 1];
-        
+
         if (companySlug && companySlug !== 'company') {
           // Try common domain patterns based on LinkedIn company slug
           const possibleDomains = [
@@ -197,7 +197,7 @@ const getLevelColor = (level: string) => {
             `${companySlug}.in`,
             `${companySlug}.org`
           ];
-          
+
           // Return the first potential logo URL
           return `https://logo.clearbit.com/${possibleDomains[0]}`;
         }
@@ -205,7 +205,7 @@ const getLevelColor = (level: string) => {
         console.log('Error parsing LinkedIn URL:', error);
       }
     }
-    
+
     // Try to fetch logo from company website
     if (company.website && company.website.trim()) {
       try {
@@ -215,17 +215,17 @@ const getLevelColor = (level: string) => {
         console.log('Error parsing website URL:', error);
       }
     }
-    
+
     // Fallback: try to generate domain from company name
     const cleanName = name
       .replace(/\s+/g, '')
       .replace(/[^a-z0-9]/g, '')
       .toLowerCase();
-    
+
     if (cleanName.length > 2) {
       return `https://logo.clearbit.com/${cleanName}.com`;
     }
-    
+
     return null;
   };
 
@@ -311,7 +311,7 @@ export default function Jobs() {
       if (!userId) {
         throw new Error('User not logged in');
       }
-      
+
       // First create an application for this job so it can be tracked in deleted posts
       try {
         await apiRequest('POST', '/api/applications', {
@@ -322,16 +322,20 @@ export default function Jobs() {
         // Application might already exist, continue with deletion
         console.log('Application might already exist, continuing with deletion');
       }
-      
-      // Then soft delete the job with user context  
-      const response = await apiRequest('POST', `/api/jobs/${jobId}/delete`, {
-        userId: userId
+
+      // Then soft delete the job with user context using headers
+      const response = await fetch('/api/jobs/' + jobId + '/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'user-id': userId
+        }
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = 'Failed to delete job';
-        
+
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error || errorMessage;
@@ -339,16 +343,17 @@ export default function Jobs() {
           console.error('Server returned non-JSON response:', errorText);
           errorMessage = 'Server error occurred';
         }
-        
+
         throw new Error(errorMessage);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
+      queryClient.refetchQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
       toast({
         title: 'Job deleted successfully',
         description: 'The job has been moved to deleted posts and can be restored within 5 days.',
@@ -419,7 +424,7 @@ export default function Jobs() {
       navigate('/login');
       return;
     }
-    
+
     // If job has an apply URL, open it in a new tab
     if (job.applyUrl) {
       window.open(job.applyUrl, '_blank');
