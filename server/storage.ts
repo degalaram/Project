@@ -3,7 +3,7 @@ import {
   type Job, type InsertJob, type Course, type InsertCourse,
   type Application, type InsertApplication, type Contact, type InsertContact,
   type LoginData
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -11,8 +11,8 @@ import bcrypt from "bcryptjs";
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, gt, like, or, and, isNull, desc } from "drizzle-orm";
-import { deletedPostsTable, jobsTable, companiesTable } from "@shared/schema";
-import * as schema from "@shared/schema";
+import { deletedPostsTable, jobsTable, companiesTable } from "../shared/schema.js";
+import * as schema from "../shared/schema.js";
 import { nanoid } from 'nanoid'; // For generating unique IDs
 
 // Placeholder for DeletedPost type if not already defined in schema
@@ -740,8 +740,8 @@ export class MemStorage implements IStorage {
     if (filters?.userId) {
       const deletedJobIds = new Set<string>();
       this.deletedPosts.forEach(post => {
-        if (post.userId === filters.userId && post.jobId) {
-          deletedJobIds.add(post.jobId);
+        if (post.userId === filters.userId && post.originalId && post.type === 'job') {
+          deletedJobIds.add(post.originalId);
         }
       });
       jobs = jobs.filter(job => !deletedJobIds.has(job.id));
