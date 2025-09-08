@@ -57,24 +57,43 @@ export default function DeletedPosts() {
     queryKey: ['deleted-posts', user?.id],
     queryFn: async () => {
       if (!user?.id) {
+        console.log('No user ID available');
         return [];
       }
       
-      console.log(`Fetching deleted posts for user: ${user.id}`);
-      
-      const response = await apiRequest('GET', `/api/deleted-posts/user/${user.id}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch deleted posts: ${response.status}`);
+      try {
+        console.log(`Fetching deleted posts for user: ${user.id}`);
+        
+        const response = await apiRequest('GET', `/api/deleted-posts/user/${user.id}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API Error: ${response.status} - ${errorText}`);
+          throw new Error(`Failed to fetch deleted posts: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Raw API response:', data);
+        console.log(`Successfully received ${Array.isArray(data) ? data.length : 0} deleted posts`);
+        
+        // Ensure we always return an array
+        if (!Array.isArray(data)) {
+          console.warn('API did not return an array, wrapping in array');
+          return [];
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Error in queryFn:', error);
+        throw error;
       }
-      
-      const data = await response.json();
-      console.log(`Successfully received ${Array.isArray(data) ? data.length : 0} deleted posts`);
-      return Array.isArray(data) ? data : [];
     },
     enabled: !!user?.id && !userLoading,
-    retry: 2,
-    retryDelay: 1000,
+    retry: (failureCount, error) => {
+      console.log(`Query retry attempt ${failureCount}:`, error);
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
@@ -184,6 +203,7 @@ export default function DeletedPosts() {
 
   // Show error state
   if (error) {
+    console.error('Deleted posts error:', error);
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -195,7 +215,10 @@ export default function DeletedPosts() {
               {error?.message || 'Something went wrong while fetching your deleted posts.'}
             </p>
             <div className="space-x-2">
-              <Button onClick={() => refetch()} variant="outline">
+              <Button onClick={() => {
+                console.log('Retrying deleted posts fetch...');
+                refetch();
+              }} variant="outline">
                 Try Again
               </Button>
               <Button onClick={() => navigate('/jobs')}>
@@ -235,6 +258,11 @@ export default function DeletedPosts() {
         </div>
 
         <div className="space-y-6">
+          {(() => {
+            console.log('Rendering deleted posts. Length:', deletedPosts?.length || 0);
+            console.log('Deleted posts data:', deletedPosts);
+            return null;
+          })()}
           {deletedPosts.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -253,10 +281,18 @@ export default function DeletedPosts() {
             </Card>
           ) : (
             deletedPosts.map((deletedPost: any) => {
-              const { job } = deletedPost;
+              console.log('Processing deleted post:', deletedPost);
+              
+              // Safe navigation for job data
+              const job = deletedPost?.job;
+              if (!job) {
+                console.warn('No job data found for deleted post:', deletedPost);
+                return null;
+              }
+              
               const deletedDate = new Date(deletedPost.deletedAt);
               const daysLeft = getDaysLeft(deletedPost.deletedAt);
-              const isExpired = new Date(job.closingDate) < new Date();
+              const isExpired = job.closingDate ? new Date(job.closingDate) < new Date() : false;
 
               return (
                 <Card 
