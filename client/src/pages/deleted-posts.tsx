@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/api';
+import { apiRequest } from '@/lib/queryClient';
 import { Navbar } from '@/components/job-portal/navbar';
 import { 
   Briefcase, 
