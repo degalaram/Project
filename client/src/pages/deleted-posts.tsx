@@ -283,12 +283,20 @@ export default function DeletedPosts() {
             deletedPosts.map((deletedPost: any) => {
               console.log('Processing deleted post:', deletedPost);
               
-              // Safe navigation for job data
-              const job = deletedPost?.job;
-              if (!job) {
-                console.warn('No job data found for deleted post:', deletedPost);
-                return null;
-              }
+              // Create job object from deleted post data structure
+              const job = deletedPost?.job || {
+                id: deletedPost.originalId,
+                title: deletedPost.title,
+                description: deletedPost.description,
+                location: deletedPost.location,
+                salary: deletedPost.salary,
+                skills: deletedPost.skills || '',
+                closingDate: deletedPost.scheduledDeletion,
+                company: deletedPost.company || {
+                  name: 'Unknown Company',
+                  location: deletedPost.location || 'Unknown Location'
+                }
+              };
               
               const deletedDate = new Date(deletedPost.deletedAt);
               const daysLeft = getDaysLeft(deletedPost.deletedAt);
