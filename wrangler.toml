@@ -1,10 +1,13 @@
+
 name = "job-portal-frontend"
 compatibility_date = "2025-09-07"
 
 [build]
 command = "npm run build:frontend"
 cwd = "."
-publish = "client/dist"
+
+[assets]
+directory = "./client/dist"
 
 [[redirects]]
 from = "/*"
