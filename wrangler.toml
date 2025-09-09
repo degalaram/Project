@@ -9,7 +9,4 @@ cwd = "."
 [assets]
 directory = "./client/dist"
 
-[[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
+
