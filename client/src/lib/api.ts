@@ -1,5 +1,5 @@
 
-const getApiUrl = () => "https://project-eks8.onrender.com";
+const getApiUrl = () => "https://your-render-backend-url.onrender.com";
 
 const API_URL = getApiUrl();
 
