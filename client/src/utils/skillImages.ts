@@ -153,6 +153,107 @@ export const getSkillImage = (skill: string) => {
   return skillImages[skill] || null;
 };
 
+// Company logo utility function for dynamic URL analysis
+export const getCompanyLogoFromUrl = (website?: string, linkedinUrl?: string, companyName?: string) => {
+  // Priority 1: Website URL analysis
+  if (website && website.trim()) {
+    try {
+      const domain = new URL(website).hostname.replace('www.', '');
+      return `https://logo.clearbit.com/${domain}`;
+    } catch (error) {
+      console.log('Error parsing website URL:', error);
+    }
+  }
+
+  // Priority 2: LinkedIn URL analysis
+  if (linkedinUrl && linkedinUrl.trim()) {
+    try {
+      // Clean up malformed URLs that might have been concatenated
+      let cleanedUrl = linkedinUrl.trim();
+      if (cleanedUrl.includes('chttps://')) {
+        cleanedUrl = cleanedUrl.replace(/.*chttps:\/\//, 'https://');
+      }
+      
+      const linkedinUrl_obj = new URL(cleanedUrl);
+      const pathParts = linkedinUrl_obj.pathname.split('/');
+      const companySlug = pathParts[pathParts.indexOf('company') + 1];
+      
+      if (companySlug && companySlug !== 'company') {
+        // Map known company slugs to their domains
+        const knownSlugs: Record<string, string> = {
+          'microsoft': 'microsoft.com',
+          'google': 'google.com',
+          'alphabet': 'google.com',
+          'amazon': 'amazon.com',
+          'ibm': 'ibm.com',
+          'oracle': 'oracle.com',
+          'adobe': 'adobe.com',
+          'salesforce': 'salesforce.com',
+          'intel': 'intel.com',
+          'nvidia': 'nvidia.com',
+          'cisco': 'cisco.com',
+          'apple': 'apple.com',
+          'meta': 'meta.com',
+          'facebook': 'meta.com',
+          'accenture': 'accenture.com',
+          'tcs': 'tcs.com',
+          'infosys': 'infosys.com',
+          'hcl': 'hcltech.com',
+          'wipro': 'wipro.com',
+          'cognizant': 'cognizant.com',
+          'capgemini': 'capgemini.com'
+        };
+
+        for (const [key, domain] of Object.entries(knownSlugs)) {
+          if (companySlug.toLowerCase().includes(key)) {
+            return `https://logo.clearbit.com/${domain}`;
+          }
+        }
+
+        // Try common domain patterns
+        return `https://logo.clearbit.com/${companySlug}.com`;
+      }
+    } catch (error) {
+      console.log('Error parsing LinkedIn URL:', error);
+    }
+  }
+
+  // Priority 3: Company name analysis
+  if (companyName) {
+    const name = companyName.toLowerCase();
+    const companyDomains: Record<string, string> = {
+      'microsoft': 'microsoft.com',
+      'google': 'google.com',
+      'amazon': 'amazon.com',
+      'ibm': 'ibm.com',
+      'oracle': 'oracle.com',
+      'adobe': 'adobe.com',
+      'salesforce': 'salesforce.com',
+      'intel': 'intel.com',
+      'nvidia': 'nvidia.com',
+      'cisco': 'cisco.com',
+      'apple': 'apple.com',
+      'meta': 'meta.com',
+      'facebook': 'meta.com',
+      'accenture': 'accenture.com',
+      'tcs': 'tcs.com',
+      'infosys': 'infosys.com',
+      'hcl': 'hcltech.com',
+      'wipro': 'wipro.com',
+      'cognizant': 'cognizant.com',
+      'capgemini': 'capgemini.com'
+    };
+
+    for (const [key, domain] of Object.entries(companyDomains)) {
+      if (name.includes(key)) {
+        return `https://logo.clearbit.com/${domain}`;
+      }
+    }
+  }
+
+  return null;
+};
+
 // Icon fallback for skills without images
 export const getSkillIcon = (skill: string) => {
   const skillIcons: Record<string, string> = {
