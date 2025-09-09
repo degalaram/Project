@@ -12,6 +12,7 @@ import { Navbar } from '@/components/job-portal/navbar';
 import { Footer } from '@/components/job-portal/footer';
 import { Plus, Building, Globe, Linkedin, MapPin, Trash2, Edit, Eye } from 'lucide-react';
 import type { InsertCompany, Company } from '@shared/schema';
+import { getCompanyLogoFromUrl } from '@/utils/skillImages';
 
 function AddCompanyDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -66,7 +67,14 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    createCompanyMutation.mutate(formData);
+    
+    // Auto-populate logo based on company details
+    const updatedFormData = {
+      ...formData,
+      logo: getCompanyLogoFromUrl(formData.website, formData.linkedinUrl, formData.name) || formData.logo
+    };
+    
+    createCompanyMutation.mutate(updatedFormData);
   };
 
   const handleChange = (field: keyof InsertCompany, value: string) => {
@@ -244,7 +252,14 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
       });
       return;
     }
-    updateCompanyMutation.mutate(formData);
+    
+    // Auto-update logo based on the new company details
+    const updatedFormData = {
+      ...formData,
+      logo: getCompanyLogoFromUrl(formData.website, formData.linkedinUrl, formData.name) || formData.logo
+    };
+    
+    updateCompanyMutation.mutate(updatedFormData);
   };
 
   const handleChange = (field: keyof InsertCompany, value: string) => {
@@ -354,6 +369,7 @@ export default function Companies() {
     queryKey: ['companies'],
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   const queryClient = useQueryClient();
@@ -387,110 +403,16 @@ export default function Companies() {
   });
 
   const getCompanyLogo = (company: Company) => {
-    const name = company.name.toLowerCase();
+    // Use the centralized utility function that properly analyzes URLs
+    const dynamicLogo = getCompanyLogoFromUrl(company.website, company.linkedinUrl, company.name);
     
-    // First, check if company already has a logo URL
-    if (company.logo && company.logo.trim()) {
-      return company.logo;
+    // If we have a dynamic logo that's different from stored logo, prefer the dynamic one
+    if (dynamicLogo && company.logo !== dynamicLogo) {
+      return dynamicLogo;
     }
     
-    // Major tech companies with specific logo mappings
-    const companyLogos = {
-      'accenture': 'https://logo.clearbit.com/accenture.com',
-      'tcs': 'https://logo.clearbit.com/tcs.com',
-      'tata consultancy': 'https://logo.clearbit.com/tcs.com',
-      'infosys': 'https://logo.clearbit.com/infosys.com',
-      'hcl': 'https://logo.clearbit.com/hcltech.com',
-      'hcl technologies': 'https://logo.clearbit.com/hcltech.com',
-      'wipro': 'https://logo.clearbit.com/wipro.com',
-      'cognizant': 'https://logo.clearbit.com/cognizant.com',
-      'capgemini': 'https://logo.clearbit.com/capgemini.com',
-      'microsoft': 'https://logo.clearbit.com/microsoft.com',
-      'google': 'https://logo.clearbit.com/google.com',
-      'alphabet': 'https://logo.clearbit.com/google.com',
-      'amazon': 'https://logo.clearbit.com/amazon.com',
-      'oracle': 'https://logo.clearbit.com/oracle.com',
-      'ibm': 'https://logo.clearbit.com/ibm.com',
-      'adobe': 'https://logo.clearbit.com/adobe.com',
-      'salesforce': 'https://logo.clearbit.com/salesforce.com',
-      'intel': 'https://logo.clearbit.com/intel.com',
-      'nvidia': 'https://logo.clearbit.com/nvidia.com',
-      'cisco': 'https://logo.clearbit.com/cisco.com',
-      'apple': 'https://logo.clearbit.com/apple.com',
-      'facebook': 'https://logo.clearbit.com/facebook.com',
-      'meta': 'https://logo.clearbit.com/meta.com',
-      'netflix': 'https://logo.clearbit.com/netflix.com',
-      'uber': 'https://logo.clearbit.com/uber.com',
-      'airbnb': 'https://logo.clearbit.com/airbnb.com',
-      'spotify': 'https://logo.clearbit.com/spotify.com',
-      'twitter': 'https://logo.clearbit.com/twitter.com',
-      'linkedin': 'https://logo.clearbit.com/linkedin.com',
-      'paypal': 'https://logo.clearbit.com/paypal.com',
-      'tesla': 'https://logo.clearbit.com/tesla.com',
-      'adp': 'https://logo.clearbit.com/adp.com',
-      'honeywell': 'https://logo.clearbit.com/honeywell.com',
-      'zoho': 'https://logo.clearbit.com/zoho.com',
-      'freshworks': 'https://logo.clearbit.com/freshworks.com',
-      'byju': 'https://logo.clearbit.com/byjus.com',
-      'flipkart': 'https://logo.clearbit.com/flipkart.com',
-      'paytm': 'https://logo.clearbit.com/paytm.com',
-      'ola': 'https://logo.clearbit.com/olacabs.com',
-      'swiggy': 'https://logo.clearbit.com/swiggy.com',
-      'zomato': 'https://logo.clearbit.com/zomato.com'
-    };
-
-    // Check for exact company name matches
-    for (const [key, logoUrl] of Object.entries(companyLogos)) {
-      if (name.includes(key)) {
-        return logoUrl;
-      }
-    }
-
-    // Try to extract domain from LinkedIn URL first (often more reliable)
-    if (company.linkedinUrl && company.linkedinUrl.trim()) {
-      try {
-        const linkedinUrl = new URL(company.linkedinUrl);
-        const pathParts = linkedinUrl.pathname.split('/');
-        const companySlug = pathParts[pathParts.indexOf('company') + 1];
-        
-        if (companySlug && companySlug !== 'company') {
-          // Try common domain patterns based on LinkedIn company slug
-          const possibleDomains = [
-            `${companySlug}.com`,
-            `${companySlug}.co`,
-            `${companySlug}.in`,
-            `${companySlug}.org`
-          ];
-          
-          // Return the first potential logo URL
-          return `https://logo.clearbit.com/${possibleDomains[0]}`;
-        }
-      } catch (error) {
-        console.log('Error parsing LinkedIn URL:', error);
-      }
-    }
-    
-    // Try to fetch logo from company website
-    if (company.website && company.website.trim()) {
-      try {
-        const domain = new URL(company.website).hostname.replace('www.', '');
-        return `https://logo.clearbit.com/${domain}`;
-      } catch (error) {
-        console.log('Error parsing website URL:', error);
-      }
-    }
-    
-    // Fallback: try to generate domain from company name
-    const cleanName = name
-      .replace(/\s+/g, '')
-      .replace(/[^a-z0-9]/g, '')
-      .toLowerCase();
-    
-    if (cleanName.length > 2) {
-      return `https://logo.clearbit.com/${cleanName}.com`;
-    }
-    
-    return null;
+    // Otherwise use stored logo or fall back to dynamic logo
+    return company.logo || dynamicLogo;
   };
 
   const handleDeleteCompany = (companyId: string, companyName: string) => {
