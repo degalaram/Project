@@ -108,13 +108,30 @@ export default function DeletedPosts() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Restore success result:', result);
+      
+      // Invalidate and refetch all related queries immediately
       queryClient.invalidateQueries({ queryKey: ['deleted-posts', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deleted-posts/user', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['applications/user', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/applications/user', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['jobs', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      
+      // Force immediate refetch of critical data
+      queryClient.refetchQueries({ queryKey: ['jobs', user?.id] });
+      queryClient.refetchQueries({ queryKey: ['applications/user', user?.id] });
+      
+      // Small delay then refetch again to ensure data consistency
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['jobs', user?.id] });
+        queryClient.refetchQueries({ queryKey: ['applications/user', user?.id] });
+      }, 500);
+      
       toast({
         title: 'Post restored successfully',
-        description: 'Your job application has been restored and moved back to My Applications.',
+        description: `The job post has been restored and you can now apply to it again. ${result.applicationsRemoved || 0} application(s) were removed.`,
       });
     },
     onError: (error: any) => {
