@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const jobs = await storage.getJobs(filters);
-      console.log(`Found ${jobs.length} jobs`);
+      console.log(`Found ${jobs.length} jobs for user ${userId || 'anonymous'}`);
       res.json(jobs);
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -252,6 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingApplication = await storage.getUserApplications(userId).then(apps => 
         apps.find(app => app.job.id === jobId)
       );
+
+      let applicationId = null;
       if (!existingApplication) {
         const newApplication = {
           id: nanoid(),
@@ -262,7 +264,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           coverLetter: 'Applied before deletion'
         };
         await storage.createApplication(newApplication);
+        applicationId = newApplication.id;
         console.log(`Created application for user ${userId} and job ${jobId}`);
+      } else {
+        applicationId = existingApplication.id;
       }
 
       // Add to deleted posts
@@ -270,6 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: nanoid(),
         userId,
         originalId: jobId,
+        jobId: jobId,
+        applicationId: applicationId,
         type: 'job' as const,
         title: job.title,
         description: job.description,
@@ -388,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (deletedPost.job) {
           return deletedPost;
         }
-        
+
         // Otherwise, create the expected structure from the flat data
         return {
           id: deletedPost.id,
@@ -421,11 +428,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restore deleted post
   app.post("/api/deleted-posts/:id/restore", async (req, res) => {
     try {
-      const restoredApplication = await storage.restoreDeletedPost(req.params.id);
-      res.json(restoredApplication);
+      console.log(`Restoring deleted post: ${req.params.id}`);
+
+      // Get the deleted post first to understand what we're restoring
+      const deletedPosts = await storage.getDeletedPosts();
+      const deletedPost = deletedPosts.find(post => post.id === req.params.id);
+
+      if (!deletedPost) {
+        return res.status(404).json({ error: 'Deleted post not found' });
+      }
+
+      console.log(`Found deleted post for user ${deletedPost.userId} and job ${deletedPost.jobId}`);
+
+      // If this is a MemStorage instance, we need to manually clean up applications
+      if (storage.constructor.name === 'MemStorage') {
+        // Remove any applications for this job and user combination
+        const userApplications = await storage.getUserApplications(deletedPost.userId);
+        const applicationsToRemove = userApplications.filter(app => app.job.id === deletedPost.jobId);
+
+        console.log(`Found ${applicationsToRemove.length} applications to remove for job ${deletedPost.jobId}`);
+
+        for (const app of applicationsToRemove) {
+          await storage.deleteApplication(app.id);
+          console.log(`Removed application ${app.id}`);
+        }
+      }
+
+      // Now restore the post
+      const result = await storage.restoreDeletedPost(req.params.id);
+      console.log(`Successfully restored deleted post: ${req.params.id}`);
+      res.json(result);
     } catch (error) {
       console.error("Error restoring deleted post:", error);
-      res.status(500).json({ message: "Failed to restore post" });
+      res.status(500).json({ error: error.message });
     }
   });
 
