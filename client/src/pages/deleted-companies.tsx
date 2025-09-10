@@ -218,8 +218,16 @@ export default function DeletedCompanies() {
   // Fetch deleted companies
   const { data: deletedCompanies = [], isLoading } = useQuery<DeletedCompany[]>({
     queryKey: ['deleted-companies'],
-    refetchInterval: 5000, // Refresh every 5 seconds for better real-time updates
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/deleted-companies');
+      if (!response.ok) {
+        throw new Error('Failed to fetch deleted companies');
+      }
+      return response.json();
+    },
+    refetchInterval: 2000, // Refresh every 2 seconds for better real-time updates
     refetchOnWindowFocus: true, // Refetch when user comes back to page
+    refetchOnMount: true, // Always refetch when component mounts
     staleTime: 0, // Always consider data stale so it refetches immediately
   });
 
