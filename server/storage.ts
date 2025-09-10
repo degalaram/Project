@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
 // Drizzle imports for database operations
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, gt, like, or, and, isNull, desc } from "drizzle-orm";
+import { eq, desc, ilike, or, sql, and, not, inArray } from 'drizzle-orm';
 import { deletedPostsTable, jobsTable, companiesTable } from "../shared/schema.js";
 import * as schema from "../shared/schema.js";
 import { nanoid } from 'nanoid'; // For generating unique IDs
@@ -1183,26 +1183,48 @@ export class MemStorage implements IStorage {
   }
 
   async restoreDeletedPost(deletedPostId: string): Promise<any> {
+    console.log(`[RESTORE] Starting restoration of deleted post: ${deletedPostId}`);
+    
     const deletedPost = this.deletedPosts.get(deletedPostId);
     if (!deletedPost) {
+      console.log(`[RESTORE] Deleted post not found: ${deletedPostId}`);
       throw new Error('Deleted post not found');
     }
 
-    // Restore the application
-    const restoredApplication: Application = {
-      id: deletedPost.applicationId || randomUUID(),
-      userId: deletedPost.userId,
-      jobId: deletedPost.jobId,
-      status: null,
-      appliedAt: new Date(),
-    };
+    console.log(`[RESTORE] Found deleted post for user ${deletedPost.userId} and job ${deletedPost.jobId}`);
 
-    this.applications.set(restoredApplication.id, restoredApplication);
+    // Remove ALL applications for this job and user combination to completely reset apply status
+    const applicationsToRemove = [];
+    Array.from(this.applications.entries()).forEach(([key, app]) => {
+      if (app.jobId === deletedPost.jobId && app.userId === deletedPost.userId) {
+        applicationsToRemove.push(key);
+      }
+    });
+
+    console.log(`[RESTORE] Found ${applicationsToRemove.length} applications to remove`);
+    
+    // Remove all found applications
+    applicationsToRemove.forEach(appId => {
+      this.applications.delete(appId);
+      console.log(`[RESTORE] Removed application ${appId} for job ${deletedPost.jobId} and user ${deletedPost.userId}`);
+    });
+
+    // Also remove the specific application ID if it exists in the deleted post
+    if (deletedPost.applicationId) {
+      this.applications.delete(deletedPost.applicationId);
+      console.log(`[RESTORE] Removed specific application ${deletedPost.applicationId} during restore`);
+    }
 
     // Remove from deleted posts
     this.deletedPosts.delete(deletedPostId);
 
-    return restoredApplication;
+    console.log(`[RESTORE] Successfully restored job ${deletedPost.jobId} for user ${deletedPost.userId} - apply status completely reset`);
+    return { 
+      message: 'Post restored successfully', 
+      jobId: deletedPost.jobId,
+      userId: deletedPost.userId,
+      applicationsRemoved: applicationsToRemove.length + (deletedPost.applicationId ? 1 : 0)
+    };
   }
 
   async permanentlyDeletePost(deletedPostId: string): Promise<void> {
@@ -1314,48 +1336,96 @@ export class DbStorage implements IStorage {
     // Construct the base query to select jobs and join with companies
     let query = db
       .select({
-        job: schema.jobs,
-        company: schema.companies,
+        id: jobsTable.id,
+        companyId: jobsTable.companyId,
+        title: jobsTable.title,
+        description: jobsTable.description,
+        requirements: jobsTable.requirements,
+        qualifications: jobsTable.qualifications,
+        skills: jobsTable.skills,
+        experienceLevel: jobsTable.experienceLevel,
+        experienceMin: jobsTable.experienceMin,
+        experienceMax: jobsTable.experienceMax,
+        location: jobsTable.location,
+        jobType: jobsTable.jobType,
+        salary: jobsTable.salary,
+        applyUrl: jobsTable.applyUrl,
+        closingDate: jobsTable.closingDate,
+        batchEligible: jobsTable.batchEligible,
+        isActive: jobsTable.isActive,
+        createdAt: jobsTable.createdAt,
+        companyName: companiesTable.name,
+        companyDescription: companiesTable.description,
+        companyWebsite: companiesTable.website,
+        companyLogo: companiesTable.logo,
+        companyLinkedinUrl: companiesTable.linkedinUrl,
+        companyIndustry: companiesTable.industry,
+        companySize: companiesTable.size,
+        companyLocation: companiesTable.location,
+        companyFounded: companiesTable.founded,
       })
-      .from(schema.jobs)
-      .leftJoin(schema.companies, eq(schema.jobs.companyId, schema.companies.id));
+      .from(jobsTable)
+      .innerJoin(companiesTable, eq(jobsTable.companyId, companiesTable.id))
+      .where(eq(jobsTable.isActive, true));
 
-    // Apply user-specific deletion filter if userId is provided
-    // This requires joining with the deletedPostsTable
+    // If userId is provided, exclude jobs that have been soft-deleted by this user
     if (filters?.userId) {
-      query = query.leftJoin(deletedPostsTable, and(
-        eq(schema.jobs.id, deletedPostsTable.jobId),
-        eq(deletedPostsTable.userId, filters.userId)
-      ));
-      // Filter out jobs that have a corresponding entry in deletedPostsTable for the given user
-      query = query.where(isNull(deletedPostsTable.id));
+      const userDeletedJobs = await db
+        .select({ originalId: deletedPostsTable.originalId })
+        .from(deletedPostsTable)
+        .where(
+          and(
+            eq(deletedPostsTable.userId, filters.userId),
+            eq(deletedPostsTable.type, 'job')
+          )
+        );
+
+      const deletedJobIds = userDeletedJobs.map(dp => dp.originalId);
+
+      if (deletedJobIds.length > 0) {
+        query = query.where(
+          and(
+            eq(jobsTable.isActive, true),
+            not(inArray(jobsTable.id, deletedJobIds))
+          )
+        );
+      }
     }
 
-    // Apply other filters
-    if (filters?.experienceLevel) {
-      query = query.where(eq(schema.jobs.experienceLevel, filters.experienceLevel));
-    }
-
-    if (filters?.location) {
-      query = query.where(like(schema.jobs.location, `%${filters.location}%`));
-    }
-
-    if (filters?.search) {
-      query = query.where(
-        or(
-          like(schema.jobs.title, `%${filters.search}%`),
-          like(schema.jobs.description, `%${filters.search}%`),
-          like(schema.jobs.skills, `%${filters.search}%`)
-        )
-      );
-    }
-
-    const jobsWithCompanies = await query;
+    const jobs = await query.orderBy(desc(jobsTable.createdAt));
 
     // Map the results to the expected format
-    return jobsWithCompanies.map(row => ({
-      ...row.job,
-      company: row.company!
+    return jobs.map(job => ({
+      id: job.id,
+      companyId: job.companyId,
+      title: job.title,
+      description: job.description,
+      requirements: job.requirements,
+      qualifications: job.qualifications,
+      skills: job.skills,
+      experienceLevel: job.experienceLevel as 'fresher' | 'experienced',
+      experienceMin: job.experienceMin,
+      experienceMax: job.experienceMax,
+      location: job.location,
+      jobType: job.jobType as 'full-time' | 'part-time' | 'contract' | 'internship',
+      salary: job.salary,
+      applyUrl: job.applyUrl,
+      closingDate: job.closingDate,
+      batchEligible: job.batchEligible,
+      isActive: job.isActive,
+      createdAt: job.createdAt,
+      company: {
+        id: job.companyId,
+        name: job.companyName,
+        description: job.companyDescription,
+        website: job.companyWebsite,
+        logo: job.companyLogo,
+        linkedinUrl: job.companyLinkedinUrl,
+        industry: job.companyIndustry,
+        size: job.companySize as 'startup' | 'small' | 'medium' | 'large' | 'enterprise',
+        location: job.companyLocation,
+        founded: job.companyFounded,
+      }
     }));
   }
 
@@ -1675,6 +1745,7 @@ export class DbStorage implements IStorage {
         id: nanoid(),
         userId,
         jobId,
+        type: 'job', // Explicitly define type
         deletedAt: new Date()
       };
 
