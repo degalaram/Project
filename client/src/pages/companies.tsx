@@ -370,6 +370,7 @@ export default function Companies() {
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchInterval: 5000, // Refresh every 5 seconds for better synchronization
   });
 
   const queryClient = useQueryClient();
