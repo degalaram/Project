@@ -285,9 +285,31 @@ export default function Jobs() {
   }, [navigate]);
 
   const { data: allJobs = [], isLoading, refetch } = useQuery({
-    queryKey: ['jobs'],
-    staleTime: 0, // Always refetch when component mounts
+    queryKey: ['jobs', user?.id],
+    queryFn: async () => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (user?.id) {
+        headers['user-id'] = user.id;
+      }
+      
+      const response = await fetch('/api/jobs', {
+        method: 'GET',
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs');
+      }
+      return response.json();
+    },
+    staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    retry: 3,
+    enabled: !!user?.id,
   });
 
   // Refetch jobs when component mounts or tab becomes active
@@ -296,14 +318,29 @@ export default function Jobs() {
   }, [refetch]);
 
   const { data: applications = [] } = useQuery({
-    queryKey: ['applications/user', user.id],
-    enabled: !!user.id,
+    queryKey: ['applications/user', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await apiRequest('GET', `/api/applications/user/${user.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch applications');
+      }
+      return response.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 0,
+    retry: 3,
   });
 
   useEffect(() => {
+    console.log('Applications data updated:', applications);
     if (Array.isArray(applications) && applications.length > 0) {
       const appliedJobIds = applications.map((app: any) => app.jobId);
+      console.log('Setting applied job IDs:', appliedJobIds);
       setAppliedJobs(appliedJobIds);
+    } else {
+      console.log('No applications found, resetting applied jobs');
+      setAppliedJobs([]);
     }
   }, [applications]);
 
