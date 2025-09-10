@@ -218,7 +218,9 @@ export default function DeletedCompanies() {
   // Fetch deleted companies
   const { data: deletedCompanies = [], isLoading } = useQuery<DeletedCompany[]>({
     queryKey: ['deleted-companies'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 5000, // Refresh every 5 seconds for better real-time updates
+    refetchOnWindowFocus: true, // Refetch when user comes back to page
+    staleTime: 0, // Always consider data stale so it refetches immediately
   });
 
   // Restore company mutation
