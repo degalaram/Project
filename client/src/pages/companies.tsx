@@ -67,13 +67,13 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    
+
     // Auto-populate logo based on company details
     const updatedFormData = {
       ...formData,
       logo: getCompanyLogoFromUrl(formData.website, formData.linkedinUrl, formData.name) || formData.logo
     };
-    
+
     createCompanyMutation.mutate(updatedFormData);
   };
 
@@ -252,13 +252,13 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
       });
       return;
     }
-    
+
     // Auto-update logo based on the new company details
     const updatedFormData = {
       ...formData,
       logo: getCompanyLogoFromUrl(formData.website, formData.linkedinUrl, formData.name) || formData.logo
     };
-    
+
     updateCompanyMutation.mutate(updatedFormData);
   };
 
@@ -377,7 +377,7 @@ export default function Companies() {
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
   const queryClient = useQueryClient();
@@ -398,10 +398,10 @@ export default function Companies() {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
       queryClient.invalidateQueries({ queryKey: ['deleted-companies'] });
       queryClient.invalidateQueries({ queryKey: ['/api/deleted-companies'] });
-      
+
       // Also refetch the current companies data immediately
       queryClient.refetchQueries({ queryKey: ['companies'] });
-      
+
       toast({
         title: "Company moved to trash",
         description: "The company has been moved to deleted companies. You can restore it within 7 days.",
@@ -420,12 +420,12 @@ export default function Companies() {
   const getCompanyLogo = (company: Company) => {
     // Use the centralized utility function that properly analyzes URLs
     const dynamicLogo = getCompanyLogoFromUrl(company.website, company.linkedinUrl, company.name);
-    
+
     // If we have a dynamic logo that's different from stored logo, prefer the dynamic one
     if (dynamicLogo && company.logo !== dynamicLogo) {
       return dynamicLogo;
     }
-    
+
     // Otherwise use stored logo or fall back to dynamic logo
     return company.logo || dynamicLogo;
   };
