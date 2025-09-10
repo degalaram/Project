@@ -246,14 +246,40 @@ export default function Jobs() {
   const [activeTab, setActiveTab] = useState('all');
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const getUserFromStorage = () => {
+    try {
+      const userString = localStorage.getItem('user');
+      if (!userString || userString === 'null' || userString === 'undefined') {
+        return null;
+      }
+      return JSON.parse(userString);
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return null;
+    }
+  };
+
+  const user = getUserFromStorage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Check if user is logged in
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (!user) {
+    const userString = localStorage.getItem('user');
+    if (!userString || userString === 'null' || userString === 'undefined') {
+      console.log('User not found in localStorage, redirecting to login');
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      const parsedUser = JSON.parse(userString);
+      if (!parsedUser || !parsedUser.id) {
+        console.log('Invalid user data, redirecting to login');
+        navigate('/login');
+      }
+    } catch (error) {
+      console.log('Error parsing user data, redirecting to login');
       navigate('/login');
     }
   }, [navigate]);
