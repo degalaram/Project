@@ -367,10 +367,17 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
 export default function Companies() {
   const { data: companies = [], isLoading } = useQuery<Company[]>({
     queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/companies');
+      if (!response.ok) {
+        throw new Error('Failed to fetch companies');
+      }
+      return response.json();
+    },
     staleTime: 0,
     refetchOnMount: true,
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchInterval: 5000, // Refresh every 5 seconds for better synchronization
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
   });
 
   const queryClient = useQueryClient();
@@ -386,8 +393,15 @@ export default function Companies() {
       return response.json();
     },
     onSuccess: (result) => {
+      // Invalidate all related queries to ensure immediate UI updates
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
       queryClient.invalidateQueries({ queryKey: ['deleted-companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deleted-companies'] });
+      
+      // Also refetch the current companies data immediately
+      queryClient.refetchQueries({ queryKey: ['companies'] });
+      
       toast({
         title: "Company moved to trash",
         description: "The company has been moved to deleted companies. You can restore it within 7 days.",
