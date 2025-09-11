@@ -1,3 +1,4 @@
+
 const getApiUrl = () => {
   // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -29,17 +30,31 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 export async function apiRequest(method: string, endpoint: string, data?: any) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const url = endpoint.startsWith("http") ? endpoint : `${API_URL}${endpoint}`;
+  
+  const options: RequestInit = {
     method,
+    credentials: "include", // CRITICAL: Required for session management
     headers: {
       "Content-Type": "application/json",
     },
-    body: data ? JSON.stringify(data) : undefined,
-  });
+  };
 
+  if (data && (method === "POST" || method === "PUT" || method === "PATCH")) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    // Safe error handling - try JSON first, fallback to text
+    try {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    } catch {
+      const errorText = await response.text();
+      throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    }
   }
 
   return response;
