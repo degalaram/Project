@@ -59,12 +59,6 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         try {
-          // If no API URL is configured, return empty data instead of making failed requests
-          if (!API_BASE_URL) {
-            console.warn('No API URL configured, returning mock data');
-            return { data: [] };
-          }
-
           const url = `${API_BASE_URL}/api/${queryKey.join("/")}`;
           const user = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -83,8 +77,7 @@ export const queryClient = new QueryClient({
           return response.json();
         } catch (error) {
           console.error('Query failed:', error);
-          // Return empty data instead of throwing to prevent unhandled rejections
-          return { data: [] };
+          throw error; // Let the component handle the error properly
         }
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -92,6 +85,12 @@ export const queryClient = new QueryClient({
         // Don't retry if it's a 4xx error (client error)
         if (error.message.includes('4')) return false;
         return failureCount < 3;
+      },
+    },
+    mutations: {
+      retry: false,
+      onError: (error) => {
+        console.error('Mutation failed:', error);
       },
     },
   },
