@@ -23,7 +23,10 @@ const corsOptions = {
     'http://localhost:5000',
     /\.netlify\.app$/,
     /\.vercel\.app$/,
-    /\.onrender\.com$/
+    /\.onrender\.com$/,
+    /\.pages\.dev$/,
+    /\.workers\.dev$/,
+    /\.cloudflare\.com$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
