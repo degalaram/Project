@@ -1,5 +1,26 @@
 
-const getApiUrl = () => "https://your-render-backend-url.onrender.com";
+const getApiUrl = () => {
+  // For Replit development environment
+  if (window.location.hostname.includes('replit.dev') || 
+      window.location.hostname.includes('repl.co') || 
+      window.location.hostname.includes('replit.app')) {
+    return `${window.location.protocol}//${window.location.hostname}`;
+  }
+  
+  // For localhost development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return "http://localhost:5000";
+  }
+  
+  // For Cloudflare Pages deployment, use the Cloudflare Workers proxy
+  if (window.location.hostname.includes('pages.dev') || 
+      window.location.hostname.includes('workers.dev')) {
+    return `${window.location.protocol}//${window.location.hostname}`;
+  }
+  
+  // Default fallback - your actual Render backend URL
+  return "https://jobportall1.onrender.com";
+};
 
 const API_URL = getApiUrl();
 
