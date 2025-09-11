@@ -25,8 +25,8 @@ const getApiBaseUrl = () => {
     return `${window.location.protocol}//${window.location.hostname}`;
   }
   
-  // Default fallback - your actual Render backend URL
-  return "https://project-1-yxba.onrender.com";
+  // For production deployment - use same origin
+  return `${window.location.protocol}//${window.location.hostname}`;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -82,11 +82,14 @@ export const queryClient = new QueryClient({
           throw error; // Let the component handle the error properly
         }
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 1 * 60 * 1000, // 1 minute for faster updates
+      cacheTime: 2 * 60 * 1000, // 2 minutes cache
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
       retry: (failureCount, error) => {
         // Don't retry if it's a 4xx error (client error)
         if (error.message.includes('4')) return false;
-        return failureCount < 3;
+        return failureCount < 2; // Reduce retries for faster response
       },
     },
     mutations: {
