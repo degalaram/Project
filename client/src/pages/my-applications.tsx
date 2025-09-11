@@ -38,11 +38,28 @@ export default function MyApplications() {
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['applications/user', user.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await apiRequest('GET', `/api/applications/user/${user.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch applications');
+      }
+      return response.json();
+    },
     enabled: !!user.id,
+    staleTime: 0,
+    retry: 3,
   });
 
   const { data: jobs = [] } = useQuery({
     queryKey: ['jobs'],
+    queryFn: async () => {
+      const response = await fetch('/api/jobs');
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs');
+      }
+      return response.json();
+    },
   });
 
   const removeApplicationMutation = useMutation({
