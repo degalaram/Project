@@ -24,7 +24,7 @@ const __dirname = path.dirname(__filename);
 export async function registerRoutes(app: Express): Promise<Server> {
   // Enable CORS for all origins during development. For production, configure specific origins.
   const allowedOrigins = [
-    'https://jobportall.ramdegala3.workers.dev', // Your Cloudflare Workers domain
+    // Your Cloudflare Workers domain
     'http://localhost:5173', // Local development
     'http://localhost:3000', // Alternative local port
     process.env.FRONTEND_URL, // From environment variables
