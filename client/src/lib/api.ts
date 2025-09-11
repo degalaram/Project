@@ -19,7 +19,7 @@ const getApiUrl = () => {
   }
   
   // Default fallback - your actual Render backend URL
-  return "https://jobportall1.onrender.com";
+  return "https://project-1-yxba.onrender.com";
 };
 
 const API_URL = getApiUrl();
