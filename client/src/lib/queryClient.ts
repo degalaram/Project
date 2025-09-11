@@ -2,6 +2,11 @@ import { QueryClient } from "@tanstack/react-query";
 
 // Determine API base URL based on environment
 const getApiBaseUrl = () => {
+  // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
   // Check for explicit API URL first
   if (import.meta.env?.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
@@ -18,9 +23,8 @@ const getApiBaseUrl = () => {
     return "http://localhost:5000";
   }
 
-  // For production deployments without backend (like Cloudflare Pages)
-  // Return a placeholder that will be handled gracefully
-  return "";
+  // Default fallback - your actual Render backend URL
+  return "https://project-1-yxba.onrender.com";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -44,7 +48,10 @@ export async function apiRequest(
     options.body = JSON.stringify(body);
   }
 
-  return fetch(url, options);
+  // Prepend API base URL if it doesn't already exist
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  return fetch(fullUrl, options);
 }
 
 export const queryClient = new QueryClient({
