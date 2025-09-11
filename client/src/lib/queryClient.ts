@@ -87,15 +87,11 @@ export const queryClient = new QueryClient({
           return { data: [] };
         }
       },
-      retry: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-    mutations: {
-      retry: false,
-      onError: (error) => {
-        console.error('Mutation failed:', error);
+      retry: (failureCount, error) => {
+        // Don't retry if it's a 4xx error (client error)
+        if (error.message.includes('4')) return false;
+        return failureCount < 3;
       },
     },
   },
