@@ -1,4 +1,6 @@
 
+
+
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
@@ -24,6 +26,9 @@ const corsOptions = {
       /\.netlify\.app$/,
       /\.vercel\.app$/,
       /\.onrender\.com$/,
+      /\.pages\.dev$/,
+      /\.workers\.dev$/,
+      /\.cloudflare\.com$/,
       /localhost:\d+$/,
       /127\.0\.0\.1:\d+$/,
       /\.replit\.dev$/,
