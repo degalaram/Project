@@ -1,5 +1,10 @@
 
 const getApiUrl = () => {
+  // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
   // For Replit development environment
   if (window.location.hostname.includes('replit.dev') || 
       window.location.hostname.includes('repl.co') || 
