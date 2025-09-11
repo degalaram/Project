@@ -1,28 +1,30 @@
 import { QueryClient } from "@tanstack/react-query";
 
-// Determine API base URL based on environment
+// Determine API base URL based on environment - MUST match api.ts logic exactly
 const getApiBaseUrl = () => {
   // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // Check for explicit API URL first
-  if (import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // For Replit development environment
+  if (window.location.hostname.includes('replit.dev') || 
+      window.location.hostname.includes('repl.co') || 
+      window.location.hostname.includes('replit.app')) {
+    return `${window.location.protocol}//${window.location.hostname}`;
   }
-
-  // In development, check if running in Replit
-  if (import.meta.env?.DEV) {
-    // Use current hostname with port 5000 for Replit development
-    if (window.location.hostname.includes('replit.dev') || 
-        window.location.hostname.includes('repl.co') || 
-        window.location.hostname.includes('replit.app')) {
-      return `${window.location.protocol}//${window.location.hostname}`;
-    }
+  
+  // For localhost development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return "http://localhost:5000";
   }
-
+  
+  // For Cloudflare Pages deployment, use the Cloudflare Workers proxy
+  if (window.location.hostname.includes('pages.dev') || 
+      window.location.hostname.includes('workers.dev')) {
+    return `${window.location.protocol}//${window.location.hostname}`;
+  }
+  
   // Default fallback - your actual Render backend URL
   return "https://project-1-yxba.onrender.com";
 };
