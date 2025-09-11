@@ -29,14 +29,31 @@ function AddCompanyDialog({ children }: { children: React.ReactNode }) {
 
   const createCompanyMutation = useMutation({
     mutationFn: async (data: InsertCompany) => {
-      const response = await apiRequest('POST', '/api/companies', data);
+      // Auto-analyze and set logo before sending
+      const logoUrl = getCompanyLogoFromUrl(data.website, data.linkedinUrl, data.name);
+      const updatedData = {
+        ...data,
+        logo: logoUrl || data.logo
+      };
+      
+      const response = await apiRequest('POST', '/api/companies', updatedData);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newCompany) => {
       toast({
         title: 'Company added successfully',
-        description: 'The company has been added to the database.',
+        description: 'The company has been added with logo analysis.',
       });
+      
+      // Immediately update the cache
+      queryClient.setQueryData(['companies'], (oldData: Company[]) => {
+        return [...(oldData || []), newCompany];
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       setOpen(false);
       setFormData({
@@ -208,20 +225,46 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
 
   const updateCompanyMutation = useMutation({
     mutationFn: async (data: InsertCompany) => {
-      const response = await apiRequest('PUT', `/api/companies/${company.id}`, data);
+      // Auto-analyze and set logo before sending
+      const logoUrl = getCompanyLogoFromUrl(data.website, data.linkedinUrl, data.name);
+      const updatedData = {
+        ...data,
+        logo: logoUrl || data.logo
+      };
+      
+      console.log('Updating company with data:', updatedData);
+      const response = await apiRequest('PUT', `/api/companies/${company.id}`, updatedData);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update company');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to update company';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       return response.json();
     },
     onSuccess: (result) => {
+      console.log('Company update successful:', result);
+      
+      // Immediately update the cache
+      queryClient.setQueryData(['companies'], (oldData: Company[]) => {
+        return (oldData || []).map((c: Company) => 
+          c.id === company.id ? { ...c, ...result.company || result } : c
+        );
+      });
+      
       toast({
         title: 'Company updated successfully',
-        description: `${formData.name} has been updated successfully.`,
+        description: `${formData.name} has been updated with logo analysis.`,
       });
+      
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       setOpen(false);
+      
       // Reset form data to prevent stale data
       setFormData({
         name: '',
@@ -374,10 +417,11 @@ export default function Companies() {
       }
       return response.json();
     },
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30 seconds
+    cacheTime: 60 * 1000, // 1 minute
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchInterval: 3000,
+    refetchOnWindowFocus: false,
+    retry: 2,
   });
 
   const queryClient = useQueryClient();
