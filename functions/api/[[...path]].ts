@@ -7,8 +7,8 @@ export const onRequest = async (context: any) => {
   const apiPath = url.pathname.replace('/api', '') || '/';
   const queryString = url.search;
   
-  // Your Render backend URL - UPDATE THIS TO YOUR ACTUAL RENDER URL
-  const backendUrl = `https://jobportall1.onrender.com/api${apiPath}${queryString}`;
+  // Your Render backend URL - configured for production
+  const backendUrl = `https://project-1-yxba.onrender.com/api${apiPath}${queryString}`;
   
   // CORS headers
   const corsHeaders = {
