@@ -375,18 +375,7 @@ export default function Jobs() {
         throw new Error('User not logged in');
       }
 
-      // First create an application for this job so it can be tracked in deleted posts
-      try {
-        await apiRequest('POST', '/api/applications', {
-          userId: userId,
-          jobId: jobId,
-        });
-      } catch (error) {
-        // Application might already exist, continue with deletion
-        console.log('Application might already exist, continuing with deletion');
-      }
-
-      // Then soft delete the job with user context using headers
+      // Directly soft delete the job with user context using headers
       const response = await fetch('/api/jobs/' + jobId + '/delete', {
         method: 'POST',
         headers: {
@@ -412,11 +401,13 @@ export default function Jobs() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, { jobId }) => {
+      // Update the UI by invalidating queries (tab already switched)
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
       queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
       queryClient.refetchQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      
       toast({
         title: 'Job deleted successfully',
         description: 'The job has been moved to deleted posts and can be restored within 5 days.',
@@ -473,6 +464,10 @@ export default function Jobs() {
       return;
     }
     if (window.confirm('Are you sure you want to delete this job? It will be moved to deleted posts and can be restored within 5 days.')) {
+      // INSTANT: Switch to deleted posts tab immediately
+      setActiveTab('deleted-posts');
+      
+      // Then perform deletion in background
       deleteJobMutation.mutate({ jobId, userId: user.id });
     }
   };
