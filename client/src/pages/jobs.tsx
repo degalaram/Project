@@ -295,20 +295,14 @@ export default function Jobs() {
         headers['user-id'] = user.id;
       }
       
-      const response = await fetch('/api/jobs', {
-        method: 'GET',
-        headers,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch jobs');
-      }
+      const response = await apiRequest('GET', '/api/jobs');
       return response.json();
     },
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30 seconds
+    cacheTime: 60 * 1000, // 1 minute
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    retry: 3,
+    refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!user?.id,
   });
 
