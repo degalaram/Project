@@ -17,10 +17,11 @@ const getApiUrl = () => {
     return "http://localhost:5000";
   }
   
-  // For Cloudflare Pages deployment, use the Cloudflare Workers proxy
+  // For Cloudflare deployment, check for environment variable first, then fallback to Render
   if (window.location.hostname.includes('pages.dev') || 
       window.location.hostname.includes('workers.dev')) {
-    return `${window.location.protocol}//${window.location.hostname}`;
+    // Environment variable should be set in Cloudflare for production
+    return import.meta.env.VITE_API_BASE_URL || "https://project-1-yxba.onrender.com";
   }
   
   // Default fallback - your actual Render backend URL
