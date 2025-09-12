@@ -19,41 +19,70 @@ const getApiBaseUrl = () => {
     return "http://localhost:5000";
   }
   
-  // For Cloudflare Pages deployment, use the Cloudflare Workers proxy
+  // For Cloudflare deployment, check for environment variable first, then fallback to Render
   if (window.location.hostname.includes('pages.dev') || 
       window.location.hostname.includes('workers.dev')) {
-    return `${window.location.protocol}//${window.location.hostname}`;
+    // Environment variable should be set in Cloudflare for production
+    return import.meta.env.VITE_API_BASE_URL || "https://project-1-yxba.onrender.com";
   }
   
-  // For production deployment - use same origin
-  return `${window.location.protocol}//${window.location.hostname}`;
+  // For production deployment - fallback to Render backend
+  return "https://project-1-yxba.onrender.com";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
 
-// API request utility function
+// API request utility function with proper authentication support
 export async function apiRequest(
   method: string,
   url: string,
   body?: any,
   customHeaders?: Record<string, string>
 ): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
   const options: RequestInit = {
     method,
+    credentials: 'include', // CRITICAL: Required for session management
     headers: {
       'Content-Type': 'application/json',
       ...customHeaders,
     },
+    signal: controller.signal,
   };
 
   if (body) {
     options.body = JSON.stringify(body);
   }
 
-  // Prepend API base URL if it doesn't already exist
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
-  
-  return fetch(fullUrl, options);
+  try {
+    // Prepend API base URL if it doesn't already exist
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    
+    const response = await fetch(fullUrl, options);
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      // Safe error handling - try JSON first, fallback to text
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      } catch {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP error! status: ${response.status}`);
+      }
+    }
+    
+    return response;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your internet connection.');
+    }
+    throw error;
+  }
 }
 
 export const queryClient = new QueryClient({
@@ -64,32 +93,42 @@ export const queryClient = new QueryClient({
           const url = `${API_BASE_URL}/api/${queryKey.join("/")}`;
           const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
           const response = await fetch(url, {
             credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
               ...(user.id && { 'user-id': user.id }),
             },
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           return response.json();
-        } catch (error) {
+        } catch (error: any) {
+          if (error.name === 'AbortError') {
+            console.error('Query timeout after 10 seconds:', queryKey.join('/'));
+            throw new Error('Request timed out. Please check your internet connection.');
+          }
           console.error('Query failed:', error);
           throw error; // Let the component handle the error properly
         }
       },
-      staleTime: 1 * 60 * 1000, // 1 minute for faster updates
-      cacheTime: 2 * 60 * 1000, // 2 minutes cache
-      refetchOnWindowFocus: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes - reduce API calls
+      gcTime: 10 * 60 * 1000, // 10 minutes cache - keep data longer
+      refetchOnWindowFocus: false, // Reduce unnecessary API calls
       refetchOnMount: true,
       retry: (failureCount, error) => {
-        // Don't retry if it's a 4xx error (client error)
-        if (error.message.includes('4')) return false;
-        return failureCount < 2; // Reduce retries for faster response
+        // Don't retry timeout errors or 4xx errors
+        if (error.message.includes('timeout') || error.message.includes('4')) return false;
+        return failureCount < 1; // Reduce retries for faster response
       },
     },
     mutations: {
