@@ -370,10 +370,8 @@ export default function Jobs() {
         throw new Error('User not logged in');
       }
 
-      // Directly soft delete the job with user context using headers
-      const response = await apiRequest('POST', `/api/jobs/${jobId}/delete`, {}, {
-        'user-id': userId
-      });
+      // Use the correct soft-delete endpoint that exists in the backend
+      const response = await apiRequest('POST', `/api/jobs/${jobId}/soft-delete`, { userId });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -455,10 +453,7 @@ export default function Jobs() {
       return;
     }
     if (window.confirm('Are you sure you want to delete this job? It will be moved to deleted posts and can be restored within 5 days.')) {
-      // INSTANT: Switch to deleted posts tab immediately
-      setActiveTab('deleted-posts');
-      
-      // Then perform deletion in background
+      // Perform deletion and let the success handler manage UI updates
       deleteJobMutation.mutate({ jobId, userId: user.id });
     }
   };
