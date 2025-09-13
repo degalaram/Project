@@ -8,9 +8,139 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e5e7eb;
+        border-top: 4px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .loading-text {
+        margin-top: 16px;
+        color: #6b7280;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #error {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f8fafc;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+        text-align: center;
+      }
+      .error-content {
+        max-width: 400px;
+        background: white;
+        padding: 32px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      .error-title {
+        color: #dc2626;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 16px;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .error-message {
+        color: #4b5563;
+        margin-bottom: 24px;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .error-button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .error-button:hover {
+        background: #2563eb;
+      }
+    </style>
   </head>
   <body>
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading JobPortal...</div>
+    </div>
+
+    <div id="error">
+      <div class="error-content">
+        <div class="error-title">Loading Error</div>
+        <div class="error-message">
+          Failed to load the application. Please check your internet connection and try again.
+        </div>
+        <button class="error-button" onclick="window.location.reload()">
+          Reload Page
+        </button>
+      </div>
+    </div>
+
     <div id="root"></div>
+
+    <script>
+      // Hide loading screen when app loads
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loading = document.getElementById('loading');
+          if (loading && document.getElementById('root').children.length > 0) {
+            loading.style.display = 'none';
+          }
+        }, 1000);
+      });
+
+      // Show error if loading takes too long
+      setTimeout(() => {
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const root = document.getElementById('root');
+
+        if (loading && loading.style.display !== 'none' && root.children.length === 0) {
+          loading.style.display = 'none';
+          error.style.display = 'flex';
+        }
+      }, 10000); // 10 seconds timeout
+
+      // Global error handler
+      window.addEventListener('error', (event) => {
+        console.error('Global error:', event.error);
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+
+        if (loading) loading.style.display = 'none';
+        if (error) error.style.display = 'flex';
+      });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
