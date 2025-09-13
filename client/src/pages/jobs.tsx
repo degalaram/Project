@@ -281,7 +281,7 @@ export default function Jobs() {
     checkAuth();
   }, [navigate]);
 
-  const { data: allJobs = [], isLoading, refetch } = useQuery({
+  const { data: allJobs = [], isLoading, error: jobsError, refetch } = useQuery({
     queryKey: ['jobs', user?.id],
     queryFn: async () => {
       const headers: Record<string, string> = {
@@ -346,6 +346,28 @@ export default function Jobs() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if API fails
+  if (jobsError && isAuthChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Failed to connect to the server. Please try again later.</p>
+            <button 
+              onClick={() => refetch()}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              data-testid="button-retry"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
