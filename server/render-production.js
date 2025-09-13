@@ -173,7 +173,7 @@ const initializeData = () => {
       title: "Associate Software Engineer",
       description: "Join TCS as an Associate Software Engineer and work on innovative solutions for global clients.",
       requirements: "Programming fundamentals, analytical thinking, good communication skills",
-      qualifications: "B.E/B.Tech/M.E/M.Tech/MCA/MSc in relevant field",
+      qualifications: "B.E/B.Tech/M.E/M.Tech/MCA/Msc in relevant field",
       skills: "C, C++, Java, Database concepts, Web technologies, Logical reasoning",
       experienceLevel: "fresher",
       experienceMin: 0,
@@ -642,7 +642,7 @@ app.delete("/api/jobs/:id", (req, res) => {
     // Accept userId from query parameter to avoid issues with DELETE body
     const userId = req.query.userId || req.body?.userId || null;
     const job = storage.jobs.get(jobId);
-    
+
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
@@ -657,7 +657,7 @@ app.delete("/api/jobs/:id", (req, res) => {
 
     deletedPosts.set(jobId, deletedPost);
     storage.jobs.delete(jobId);
-    
+
     res.json({ message: "Job deleted successfully", deletedPost });
   } catch (error) {
     console.error("Error deleting job:", error);
@@ -810,6 +810,25 @@ app.delete("/api/deleted-posts/:id", (req, res) => {
     res.status(500).json({ message: "Failed to permanently delete post" });
   }
 });
+
+// Fix the permanent delete endpoint to match frontend expectations
+app.delete("/api/deleted-posts/:id/permanent", (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    if (deletedPosts.has(postId)) {
+      deletedPosts.delete(postId);
+      res.json({ message: "Post permanently deleted" });
+    } else {
+      res.status(404).json({ message: "Deleted post not found" });
+    }
+  } catch (error) {
+    console.error("Error permanently deleting post:", error);
+    res.status(500).json({ message: "Failed to permanently delete post" });
+  }
+});
+
+// Keep the existing endpoint as well
 
 // Company soft delete endpoints
 const deletedCompanies = new Map();
