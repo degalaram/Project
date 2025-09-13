@@ -234,17 +234,8 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
       
       console.log('Updating company with data:', updatedData);
       const response = await apiRequest('PUT', `/api/companies/${company.id}`, updatedData);
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = 'Failed to update company';
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
+      
+      // apiRequest already handles errors and throws them, so if we get here, response is ok
       return response.json();
     },
     onSuccess: (result) => {
