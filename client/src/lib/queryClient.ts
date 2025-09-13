@@ -2,32 +2,25 @@ import { QueryClient } from "@tanstack/react-query";
 
 // Determine API base URL based on environment - MUST match api.ts logic exactly
 const getApiBaseUrl = () => {
-  // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
+  // PRIORITY 1: Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  // For Replit development environment
+  // PRIORITY 2: For Replit development environment
   if (window.location.hostname.includes('replit.dev') || 
       window.location.hostname.includes('repl.co') || 
       window.location.hostname.includes('replit.app')) {
     return `${window.location.protocol}//${window.location.hostname}`;
   }
 
-  // For localhost development
+  // PRIORITY 3: For localhost development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return "http://localhost:5000";
   }
 
-  // For Cloudflare Workers deployment (your specific domain)
-  if (window.location.hostname.includes('workers.dev') || 
-      window.location.hostname.includes('pages.dev') ||
-      window.location.hostname === 'myportal.ramdegala3.workers.dev') {
-    // For Cloudflare Workers, the frontend and backend are on the same domain
-    return `${window.location.protocol}//${window.location.hostname}`;
-  }
-
-  // For production deployment - fallback to Render backend
+  // PRIORITY 4: For ALL production deployments - ALWAYS use Render backend
+  // This includes Cloudflare Pages, Workers, Netlify, Vercel, etc.
   return "https://project-1-yxba.onrender.com";
 };
 
