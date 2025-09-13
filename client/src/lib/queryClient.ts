@@ -6,26 +6,26 @@ const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  
+
   // For Replit development environment
   if (window.location.hostname.includes('replit.dev') || 
       window.location.hostname.includes('repl.co') || 
       window.location.hostname.includes('replit.app')) {
     return `${window.location.protocol}//${window.location.hostname}`;
   }
-  
+
   // For localhost development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return "http://localhost:5000";
   }
-  
+
   // For Cloudflare deployment, check for environment variable first, then fallback to Render
   if (window.location.hostname.includes('pages.dev') || 
       window.location.hostname.includes('workers.dev')) {
     // Environment variable should be set in Cloudflare for production
     return import.meta.env.VITE_API_BASE_URL || "https://project-1-yxba.onrender.com";
   }
-  
+
   // For production deployment - fallback to Render backend
   return "https://project-1-yxba.onrender.com";
 };
@@ -34,14 +34,14 @@ export const API_BASE_URL = getApiBaseUrl();
 
 // API request utility function with proper authentication support
 export async function apiRequest(
-  method: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
   url: string,
   body?: any,
   customHeaders?: Record<string, string>
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-  
+
   const options: RequestInit = {
     method,
     credentials: 'include', // CRITICAL: Required for session management
@@ -59,10 +59,10 @@ export async function apiRequest(
   try {
     // Prepend API base URL if it doesn't already exist
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
-    
+
     const response = await fetch(fullUrl, options);
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       // Safe error handling - try JSON first, fallback to text
       try {
@@ -73,11 +73,11 @@ export async function apiRequest(
         throw new Error(errorText || `HTTP error! status: ${response.status}`);
       }
     }
-    
+
     return response;
   } catch (error: any) {
     clearTimeout(timeoutId);
-    
+
     if (error.name === 'AbortError') {
       throw new Error('Request timed out. Please check your internet connection.');
     }
@@ -95,7 +95,7 @@ export const queryClient = new QueryClient({
 
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-          
+
           const response = await fetch(url, {
             credentials: 'include',
             headers: {
@@ -104,7 +104,7 @@ export const queryClient = new QueryClient({
             },
             signal: controller.signal,
           });
-          
+
           clearTimeout(timeoutId);
 
           if (!response.ok) {
