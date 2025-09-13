@@ -22,25 +22,7 @@ const __dirname = path.dirname(__filename);
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Enable CORS for all origins during development. For production, configure specific origins.
-  const allowedOrigins = [
-    // Your Cloudflare Workers domain
-    'http://localhost:5173', // Local development
-    'http://localhost:3000', // Alternative local port
-    process.env.FRONTEND_URL, // From environment variables
-    process.env.CORS_ORIGIN, // From environment variables
-  ].filter(Boolean); // Remove undefined values
-
-  app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: true,
-    optionsSuccessStatus: 200 // For legacy browser support
-  }));
-
-  // Handle preflight OPTIONS requests
-  app.options('*', cors());
+  // CORS is already configured in server/index.ts - no need to duplicate here
 
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
