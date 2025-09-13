@@ -1,30 +1,28 @@
 
 const getApiUrl = () => {
-  // Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
+  // PRIORITY 1: Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // For Replit development environment
+  // PRIORITY 2: For Replit development environment
   if (window.location.hostname.includes('replit.dev') || 
       window.location.hostname.includes('repl.co') || 
       window.location.hostname.includes('replit.app')) {
     return `${window.location.protocol}//${window.location.hostname}`;
   }
   
-  // For localhost development
+  // PRIORITY 3: For localhost development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return "http://localhost:5000";
   }
   
-  // For Cloudflare deployment, check for environment variable first, then fallback to Render
-  if (window.location.hostname.includes('pages.dev') || 
-      window.location.hostname.includes('workers.dev')) {
-    // Environment variable should be set in Cloudflare for production
-    return import.meta.env.VITE_API_BASE_URL || "https://project-1-yxba.onrender.com";
+  // PRIORITY 4: For Cloudflare Workers - point directly to Render backend
+  if (window.location.hostname.includes('workers.dev')) {
+    return "https://project-1-yxba.onrender.com";
   }
   
-  // Default fallback - your actual Render backend URL
+  // PRIORITY 5: For ALL other production deployments - use Render backend
   return "https://project-1-yxba.onrender.com";
 };
 
