@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -13,23 +13,16 @@ import { Navbar } from '@/components/job-portal/navbar';
 import {
   Search,
   MapPin,
-  Clock,
-  Building,
-  ExternalLink,
   Users,
   Calendar,
-  DollarSign,
-  Share2,
-  MessageCircle,
-  Instagram,
-  Send,
   CheckCircle,
   Eye,
   Linkedin,
   Mail,
   Youtube,
   X,
-  Trash2
+  Trash2,
+  Instagram
 } from 'lucide-react';
 import { FaWhatsapp, FaTelegram } from 'react-icons/fa';
 import type { Job, Company } from '@shared/schema';
@@ -114,14 +107,6 @@ const Footer = () => {
   );
 };
 
-const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'entry': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'mid': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'senior': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
-  };
 
   const getCompanyLogo = (company: Company) => {
     const name = company.name.toLowerCase();
@@ -284,15 +269,13 @@ export default function Jobs() {
   const { data: allJobs = [], isLoading, error: jobsError, refetch } = useQuery({
     queryKey: ['jobs', user?.id],
     queryFn: async () => {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      const headers: Record<string, string> = {};
       
       if (user?.id) {
         headers['user-id'] = user.id;
       }
       
-      const response = await apiRequest('GET', '/api/jobs');
+      const response = await apiRequest('GET', '/api/jobs', undefined, headers);
       return response.json();
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -405,8 +388,8 @@ export default function Jobs() {
         throw new Error('User not logged in');
       }
 
-      // Use the correct soft-delete endpoint that exists in the backend
-      const response = await apiRequest('POST', `/api/jobs/${jobId}/soft-delete`, { userId });
+      // Use the correct delete endpoint and send user-id in headers as expected by backend
+      const response = await apiRequest('POST', `/api/jobs/${jobId}/delete`, undefined, { 'user-id': userId });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -425,7 +408,7 @@ export default function Jobs() {
 
       return response.json();
     },
-    onSuccess: (data, { jobId }) => {
+    onSuccess: () => {
       // Update the UI by invalidating queries (tab already switched)
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
@@ -459,7 +442,6 @@ export default function Jobs() {
     const now = new Date();
     const closingDate = new Date(job.closingDate);
     const isExpired = closingDate < now;
-    const isExpiredRecently = (now.getTime() - closingDate.getTime()) <= (48 * 60 * 60 * 1000);
 
     switch (activeTab) {
       case 'fresher':
@@ -473,13 +455,6 @@ export default function Jobs() {
     }
   }) : [];
 
-  const handleApply = (jobId: string) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    applyMutation.mutate(jobId);
-  };
 
   const handleDeleteJob = (e: React.MouseEvent, jobId: string) => {
     e.stopPropagation();
@@ -541,18 +516,6 @@ export default function Jobs() {
     }
   };
 
-  const getTimeAgo = (date: string) => {
-    const now = new Date();
-    const posted = new Date(date);
-    const diffMs = now.getTime() - posted.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Less than 1 hour ago';
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    if (diffDays === 1) return '1 day ago';
-    return `${diffDays} days ago`;
-  };
 
   if (isLoading) {
     return (
