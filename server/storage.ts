@@ -1584,10 +1584,19 @@ export class DbStorage implements IStorage {
   }
 
   // Deleted Posts methods for DbStorage (placeholder, actual implementation would involve a separate table or soft delete)
-  async addDeletedPost(post: any): Promise<void> {
-    // In a real DB, you'd insert into a 'deleted_posts' table
+  async addDeletedPost(post: any): Promise<any> {
     console.log("Adding post to deleted posts:", post);
-    // Example: await db.insert(schema.deletedPosts).values({ ...post, deletedAt: new Date() });
+    
+    const [deletedPost] = await db.insert(deletedPostsTable).values({
+      id: post.id,
+      userId: post.userId,
+      jobId: post.jobId,
+      applicationId: post.applicationId,
+      deletedAt: new Date(post.deletedAt || Date.now())
+    }).returning();
+    
+    console.log(`Successfully added deleted post to database: ${deletedPost.id}`);
+    return deletedPost;
   }
 
   async getDeletedPosts(): Promise<any[]> {
@@ -1775,9 +1784,35 @@ export class DbStorage implements IStorage {
   }
 
   async softDeleteApplication(applicationId: string): Promise<any> {
-    // This method is not implemented in the DbStorage for now, as the focus was on jobs.
-    // A full implementation would involve a similar logic to softDeleteJob but for applications.
-    throw new Error("Method not implemented for DbStorage.");
+    console.log(`Soft deleting application: ${applicationId}`);
+    
+    // Get the application with job and company details
+    const application = await this.getApplicationById(applicationId);
+    if (!application) {
+      throw new Error('Application not found');
+    }
+
+    // Create deleted post record
+    const deletedPost = {
+      id: nanoid(),
+      userId: application.userId,
+      originalId: application.jobId,
+      jobId: application.jobId,
+      applicationId: applicationId,
+      type: 'job' as const,
+      title: application.job.title,
+      deletedAt: new Date().toISOString(),
+      scheduledDeletion: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    // Insert into deleted posts table
+    await this.addDeletedPost(deletedPost);
+    
+    // Remove the application from the database
+    await db.delete(applicationsTable).where(eq(applicationsTable.id, applicationId));
+    
+    console.log(`Application ${applicationId} soft deleted successfully`);
+    return deletedPost;
   }
 
   async restoreDeletedPost(deletedPostId: string): Promise<any> {
