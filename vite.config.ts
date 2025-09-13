@@ -24,6 +24,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5000,
     allowedHosts: true,
+    hmr: false, // Disable HMR completely for Replit
     fs: {
       strict: true,
       deny: ["**/.*"],
