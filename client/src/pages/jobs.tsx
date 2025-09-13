@@ -320,54 +320,17 @@ export default function Jobs() {
     }
   }, [applications]);
 
-  // Show loading while checking authentication
-  if (!isAuthChecked) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error if API fails
-  if (jobsError && isAuthChecked) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">Failed to connect to the server. Please try again later.</p>
-            <button 
-              onClick={() => refetch()}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              data-testid="button-retry"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Application mutation
+  // Application mutation - MOVED TO TOP TO FIX HOOKS VIOLATION
   const applyMutation = useMutation({
     mutationFn: async (jobId: string) => {
       const response = await apiRequest('POST', '/api/applications', {
-        userId: user.id,
+        userId: user?.id,
         jobId: jobId,
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['applications/user', user?.id] });
       toast({
         title: 'Application submitted!',
         description: 'Your job application has been submitted successfully.',
@@ -411,9 +374,9 @@ export default function Jobs() {
     onSuccess: () => {
       // Update the UI by invalidating queries (tab already switched)
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['applications/user', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user.id] });
-      queryClient.refetchQueries({ queryKey: ['/api/deleted-posts/user', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['applications/user', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['deleted-posts', user?.id] });
+      queryClient.refetchQueries({ queryKey: ['/api/deleted-posts/user', user?.id] });
       
       toast({
         title: 'Job deleted successfully',
@@ -429,6 +392,43 @@ export default function Jobs() {
       });
     },
   });
+
+  // Show loading while checking authentication
+  if (!isAuthChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if API fails
+  if (jobsError && isAuthChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Failed to connect to the server. Please try again later.</p>
+            <button 
+              onClick={() => refetch()}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              data-testid="button-retry"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredJobs = Array.isArray(allJobs) ? allJobs.filter((job: JobWithCompany) => {
     const matchesSearch = searchTerm === '' ||
@@ -576,7 +576,7 @@ export default function Jobs() {
           <div className="block sm:hidden mb-6">
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
               <button
-                onClick={() => { setActiveTab('all'); navigate('/jobs?tab=all'); }}
+                onClick={() => setActiveTab('all')}
                 className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'all' 
                     ? 'bg-primary text-primary-foreground shadow' 
@@ -587,7 +587,7 @@ export default function Jobs() {
                 All Jobs
               </button>
               <button
-                onClick={() => { setActiveTab('fresher'); navigate('/jobs?tab=fresher'); }}
+                onClick={() => setActiveTab('fresher')}
                 className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'fresher' 
                     ? 'bg-primary text-primary-foreground shadow' 
@@ -598,7 +598,7 @@ export default function Jobs() {
                 Fresher Jobs
               </button>
               <button
-                onClick={() => { setActiveTab('experienced'); navigate('/jobs?tab=experienced'); }}
+                onClick={() => setActiveTab('experienced')}
                 className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'experienced' 
                     ? 'bg-primary text-primary-foreground shadow' 
@@ -609,7 +609,7 @@ export default function Jobs() {
                 Experienced Jobs
               </button>
               <button
-                onClick={() => { setActiveTab('expired'); navigate('/jobs?tab=expired'); }}
+                onClick={() => setActiveTab('expired')}
                 className={`px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'expired' 
                     ? 'bg-primary text-primary-foreground shadow' 
@@ -624,10 +624,10 @@ export default function Jobs() {
 
           {/* Desktop: Horizontal Layout */}
           <TabsList className="hidden sm:grid w-full grid-cols-4 mb-4 sm:mb-6 md:mb-8 h-auto p-1">
-            <TabsTrigger value="all" data-testid="tab-all-jobs-desktop" onClick={() => navigate('/jobs?tab=all')} className="text-sm px-3 py-2">All Jobs</TabsTrigger>
-            <TabsTrigger value="fresher" data-testid="tab-fresher-jobs-desktop" onClick={() => navigate('/jobs?tab=fresher')} className="text-sm px-3 py-2">Fresher Jobs</TabsTrigger>
-            <TabsTrigger value="experienced" data-testid="tab-experienced-jobs-desktop" onClick={() => navigate('/jobs?tab=experienced')} className="text-sm px-3 py-2">Experienced Jobs</TabsTrigger>
-            <TabsTrigger value="expired" data-testid="tab-expired-jobs-desktop" onClick={() => navigate('/jobs?tab=expired')} className="text-sm px-3 py-2">Expired Jobs</TabsTrigger>
+            <TabsTrigger value="all" data-testid="tab-all-jobs-desktop" className="text-sm px-3 py-2">All Jobs</TabsTrigger>
+            <TabsTrigger value="fresher" data-testid="tab-fresher-jobs-desktop" className="text-sm px-3 py-2">Fresher Jobs</TabsTrigger>
+            <TabsTrigger value="experienced" data-testid="tab-experienced-jobs-desktop" className="text-sm px-3 py-2">Experienced Jobs</TabsTrigger>
+            <TabsTrigger value="expired" data-testid="tab-expired-jobs-desktop" className="text-sm px-3 py-2">Expired Jobs</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab}>
