@@ -305,8 +305,10 @@ export default function Jobs() {
 
   // Refetch jobs when component mounts or tab becomes active
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (isAuthChecked && user?.id) {
+      refetch();
+    }
+  }, [refetch, isAuthChecked, user?.id]);
 
   const { data: applications = [] } = useQuery({
     queryKey: ['applications/user', user?.id],
