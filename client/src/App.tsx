@@ -77,16 +77,34 @@ class ErrorBoundary extends Component<
 function Router() {
   const [location] = useLocation();
 
-  // Handle client-side routing for deployment
+  // Handle client-side routing for deployment and prevent white page on refresh
   useEffect(() => {
     console.log('🛣️ Current location:', location);
     console.log('🛣️ Window pathname:', window.location.pathname);
     
-    // Ensure proper routing on page load
-    if (location === "/" && window.location.pathname !== "/") {
-      console.log('🛣️ Updating history state');
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    // Handle refresh scenarios - redirect to jobs for authenticated users
+    const handlePageRefresh = () => {
+      const userString = localStorage.getItem('user');
+      const isLoggedIn = userString && userString !== 'null' && userString !== 'undefined';
+      
+      // If user is logged in and on root, redirect to jobs
+      if (isLoggedIn && (location === "/" || window.location.pathname === "/")) {
+        console.log('🛣️ Redirecting authenticated user to /jobs');
+        window.history.replaceState({}, "", "/jobs");
+        window.location.reload();
+      }
+    };
+    
+    // Check on mount and location changes
+    handlePageRefresh();
+    
+    // Also handle browser back/forward navigation
+    const handlePopState = () => {
+      setTimeout(handlePageRefresh, 100);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [location]);
 
   return (
