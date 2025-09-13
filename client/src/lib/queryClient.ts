@@ -4,6 +4,7 @@ import { QueryClient } from "@tanstack/react-query";
 const getApiBaseUrl = () => {
   // PRIORITY 1: Use environment variable if available (Cloudflare Pages with VITE_API_BASE_URL)
   if (import.meta.env.VITE_API_BASE_URL) {
+    console.log('Using VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
     return import.meta.env.VITE_API_BASE_URL;
   }
 
@@ -11,17 +12,21 @@ const getApiBaseUrl = () => {
   if (window.location.hostname.includes('replit.dev') || 
       window.location.hostname.includes('repl.co') || 
       window.location.hostname.includes('replit.app')) {
-    return `${window.location.protocol}//${window.location.hostname}`;
+    const replitUrl = `${window.location.protocol}//${window.location.hostname}`;
+    console.log('Using Replit URL:', replitUrl);
+    return replitUrl;
   }
 
   // PRIORITY 3: For localhost development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('Using localhost URL');
     return "http://localhost:5000";
   }
 
-  // PRIORITY 4: For ALL production deployments - ALWAYS use Render backend
-  // This includes Cloudflare Pages, Workers, Netlify, Vercel, etc.
-  return "https://project-1-yxba.onrender.com";
+  // PRIORITY 4: For Cloudflare Pages and other production deployments
+  const productionUrl = "https://project-1-yxba.onrender.com";
+  console.log('Using production URL:', productionUrl);
+  return productionUrl;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
