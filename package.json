@@ -11,6 +11,8 @@
     "dev": "NODE_ENV=development node --import tsx/esm server/index.ts",
     "build": "echo 'Using pre-built server/render-production.js for deployment'",
     "build:frontend": "./node_modules/.bin/vite build",
+    "build:cloudflare": "npm run build:frontend && wrangler deploy",
+    "preview": "vite preview",
     "start": "node server/render-production.js",
     "start:dev": "npx cross-env NODE_ENV=production node dist/production.mjs",
     "check": "npx tsc",
