@@ -19,11 +19,12 @@ const getApiBaseUrl = () => {
     return "http://localhost:5000";
   }
 
-  // For Cloudflare deployment, check for environment variable first, then fallback to Render
-  if (window.location.hostname.includes('pages.dev') || 
-      window.location.hostname.includes('workers.dev')) {
-    // Environment variable should be set in Cloudflare for production
-    return import.meta.env.VITE_API_BASE_URL || "https://project-1-yxba.onrender.com";
+  // For Cloudflare Workers deployment (your specific domain)
+  if (window.location.hostname.includes('workers.dev') || 
+      window.location.hostname.includes('pages.dev') ||
+      window.location.hostname === 'myportal.ramdegala3.workers.dev') {
+    // For Cloudflare Workers, the frontend and backend are on the same domain
+    return `${window.location.protocol}//${window.location.hostname}`;
   }
 
   // For production deployment - fallback to Render backend
