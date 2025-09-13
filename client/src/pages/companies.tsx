@@ -225,14 +225,15 @@ function EditCompanyDialog({ company, children }: { company: Company; children: 
 
   const updateCompanyMutation = useMutation({
     mutationFn: async (data: InsertCompany) => {
-      // Auto-analyze and set logo before sending
+      // Auto-analyze and set logo before sending - FORCE new logo generation
       const logoUrl = getCompanyLogoFromUrl(data.website, data.linkedinUrl, data.name);
       const updatedData = {
         ...data,
-        logo: logoUrl || data.logo
+        logo: logoUrl || '' // Force new logo or empty string, don't use old logo
       };
       
       console.log('Updating company with data:', updatedData);
+      console.log('Generated logo URL:', logoUrl);
       const response = await apiRequest('PUT', `/api/companies/${company.id}`, updatedData);
       
       // apiRequest already handles errors and throws them, so if we get here, response is ok
