@@ -371,12 +371,8 @@ export default function Jobs() {
       }
 
       // Directly soft delete the job with user context using headers
-      const response = await fetch('/api/jobs/' + jobId + '/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
-        }
+      const response = await apiRequest('POST', `/api/jobs/${jobId}/delete`, {}, {
+        'user-id': userId
       });
 
       if (!response.ok) {
