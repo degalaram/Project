@@ -4,7 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
+import { useEffect, Component, ErrorInfo, ReactNode } from "react";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Jobs from "@/pages/jobs";
@@ -21,13 +21,70 @@ import DeletedPosts from "@/pages/deleted-posts";
 import DeletedCompanies from "@/pages/deleted-companies";
 import NotFound from "@/pages/not-found";
 
+// Error Boundary Component
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error);
+    console.error('Error info:', errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+            <h1 className="text-xl font-bold text-red-600 mb-4">Something went wrong</h1>
+            <p className="text-gray-600 mb-4">
+              The application encountered an error. Please try refreshing the page.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+              Refresh Page
+            </button>
+            {this.state.error && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-gray-500">
+                  Error Details
+                </summary>
+                <pre className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded overflow-auto">
+                  {this.state.error.toString()}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function Router() {
   const [location] = useLocation();
 
   // Handle client-side routing for deployment
   useEffect(() => {
+    console.log('🛣️ Current location:', location);
+    console.log('🛣️ Window pathname:', window.location.pathname);
+    
     // Ensure proper routing on page load
     if (location === "/" && window.location.pathname !== "/") {
+      console.log('🛣️ Updating history state');
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [location]);
@@ -55,13 +112,17 @@ function Router() {
 }
 
 function App() {
+  console.log('🚀 App component rendering...');
+  
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
