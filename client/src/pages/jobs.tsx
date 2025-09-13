@@ -247,42 +247,38 @@ export default function Jobs() {
   const [activeTab, setActiveTab] = useState('all');
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
-  const getUserFromStorage = () => {
-    try {
-      const userString = localStorage.getItem('user');
-      if (!userString || userString === 'null' || userString === 'undefined') {
-        return null;
-      }
-      return JSON.parse(userString);
-    } catch (error) {
-      console.error('Error parsing user from localStorage:', error);
-      return null;
-    }
-  };
-
-  const user = getUserFromStorage();
+  const [user, setUser] = useState<any>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Check if user is logged in
   useEffect(() => {
-    const userString = localStorage.getItem('user');
-    if (!userString || userString === 'null' || userString === 'undefined') {
-      console.log('User not found in localStorage, redirecting to login');
-      navigate('/login');
-      return;
-    }
-    
-    try {
-      const parsedUser = JSON.parse(userString);
-      if (!parsedUser || !parsedUser.id) {
-        console.log('Invalid user data, redirecting to login');
+    const checkAuth = () => {
+      try {
+        const userString = localStorage.getItem('user');
+        if (!userString || userString === 'null' || userString === 'undefined') {
+          console.log('User not found in localStorage, redirecting to login');
+          navigate('/login');
+          return;
+        }
+        
+        const parsedUser = JSON.parse(userString);
+        if (!parsedUser || !parsedUser.id) {
+          console.log('Invalid user data, redirecting to login');
+          navigate('/login');
+          return;
+        }
+        
+        setUser(parsedUser);
+        setIsAuthChecked(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
         navigate('/login');
       }
-    } catch (error) {
-      console.log('Error parsing user data, redirecting to login');
-      navigate('/login');
-    }
+    };
+
+    checkAuth();
   }, [navigate]);
 
   const { data: allJobs = [], isLoading, refetch } = useQuery({
@@ -300,11 +296,11 @@ export default function Jobs() {
       return response.json();
     },
     staleTime: 30 * 1000, // 30 seconds
-    cacheTime: 60 * 1000, // 1 minute
+    gcTime: 60 * 1000, // 1 minute
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: 2,
-    enabled: !!user?.id,
+    enabled: isAuthChecked && !!user?.id,
   });
 
   // Refetch jobs when component mounts or tab becomes active
@@ -322,7 +318,7 @@ export default function Jobs() {
       }
       return response.json();
     },
-    enabled: !!user?.id,
+    enabled: isAuthChecked && !!user?.id,
     staleTime: 0,
     retry: 3,
   });
@@ -338,6 +334,21 @@ export default function Jobs() {
       setAppliedJobs([]);
     }
   }, [applications]);
+
+  // Show loading while checking authentication
+  if (!isAuthChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Application mutation
   const applyMutation = useMutation({
