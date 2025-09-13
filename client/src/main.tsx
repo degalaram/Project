@@ -3,6 +3,13 @@ import { ThemeProvider } from '@/lib/theme-context';
 import App from "./App";
 import "./index.css";
 
+// Disable Vite HMR completely for Replit environment
+if (import.meta.hot) {
+  import.meta.hot.accept = () => {};
+  import.meta.hot.dispose = () => {};
+  import.meta.hot.invalidate = () => {};
+}
+
 // Enhanced global error handling
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
@@ -48,6 +55,14 @@ try {
     </ThemeProvider>
   );
   console.log('✅ React app rendered successfully');
+  
+  // Hide loading screen after successful render
+  setTimeout(() => {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.style.display = 'none';
+    }
+  }, 100);
 } catch (error) {
   console.error('❌ Error rendering React app:', error);
   throw error;
